@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: ElevenLabs documentation
+    url: https://elevenlabs.io/docs/agents-platform/libraries/android
+    about: SDK usage guides and API documentation

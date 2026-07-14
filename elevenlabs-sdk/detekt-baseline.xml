@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>EmptyFunctionBlock:NoOpAudioManager.kt$NoOpAudioManager${}</ID>
+    <ID>EmptyFunctionBlock:SoftwareMuteProcessor.kt$SoftwareMuteProcessor${}</ID>
+    <ID>MatchingDeclarationName:ConnectionStatus.kt$Status</ID>
+    <ID>MaxLineLength:ConversationConfig.kt$AudioPipelineConfiguration$*</ID>
+    <ID>MaxLineLength:ConversationEventHandler.kt$ConversationEventHandler$Log.d("ConvEventHandler", "Feedback already sent for event ID $lastEventId (last feedback sent for: $lastFeedbackSentForEventId)")</ID>
+    <ID>MaxLineLength:ConversationEventHandler.kt$ConversationEventHandler$Log.d("ConvEventHandler", "Tool executed: ${event.toolName} -> ${if (result == null) "NO_RESPONSE" else if (result.success) "SUCCESS" else "FAILED"}")</ID>
+    <ID>MaxLineLength:ConversationSessionImpl.kt$ConversationSessionImpl$try { config.onConversationInitiationMetadata?.invoke(conversationId, agentOutputFormat, userInputFormat) } catch (_: Throwable) {}</ID>
+    <ID>MaxLineLength:TokenService.kt$TokenService$suspend</ID>
+    <ID>MaxLineLength:WebSocketConnectionTest.kt$WebSocketConnectionTest$"""{"type":"conversation_initiation_metadata","conversation_initiation_metadata_event":{"conversation_id":"conv_42","agent_output_audio_format":"pcm_16000","user_input_audio_format":"pcm_16000"}}"""</ID>
+    <ID>NestedBlockDepth:LiveKitAudioManager.kt$LiveKitAudioManager$override fun setVolume(volume: Float)</ID>
+    <ID>NewLineAtEndOfFile:AudioPermissionManager.kt$io.elevenlabs.audio.AudioPermissionManager.kt</ID>
+    <ID>NewLineAtEndOfFile:AudioSessionManager.kt$io.elevenlabs.audio.AudioSessionManager.kt</ID>
+    <ID>NewLineAtEndOfFile:AudioUtils.kt$io.elevenlabs.audio.AudioUtils.kt</ID>
+    <ID>NewLineAtEndOfFile:BaseConnection.kt$io.elevenlabs.network.BaseConnection.kt</ID>
+    <ID>NewLineAtEndOfFile:ClientTool.kt$io.elevenlabs.ClientTool.kt</ID>
+    <ID>NewLineAtEndOfFile:ConnectionState.kt$io.elevenlabs.network.ConnectionState.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationClient.kt$io.elevenlabs.ConversationClient.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationClientImpl.kt$io.elevenlabs.ConversationClientImpl.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationConfig.kt$io.elevenlabs.ConversationConfig.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationEventHandler.kt$io.elevenlabs.ConversationEventHandler.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationEventParser.kt$io.elevenlabs.network.ConversationEventParser.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationMode.kt$io.elevenlabs.models.ConversationMode.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationSession.kt$io.elevenlabs.ConversationSession.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationSessionImpl.kt$io.elevenlabs.ConversationSessionImpl.kt</ID>
+    <ID>NewLineAtEndOfFile:ConversationStatus.kt$io.elevenlabs.models.ConversationStatus.kt</ID>
+    <ID>NewLineAtEndOfFile:LiveKitAudioManager.kt$io.elevenlabs.audio.LiveKitAudioManager.kt</ID>
+    <ID>NewLineAtEndOfFile:TokenService.kt$io.elevenlabs.network.TokenService.kt</ID>
+    <ID>NewLineAtEndOfFile:WebRTCConnection.kt$io.elevenlabs.network.WebRTCConnection.kt</ID>
+    <ID>ThrowsCount:ClientToolRegistry.kt$ClientToolRegistry$private fun validateParameters(parameters: Map&lt;String, Any>)</ID>
+    <ID>UnusedParameter:AudioPermissionManager.kt$AudioPermissionManager.Companion$permissions: Array&lt;out String></ID>
+    <ID>UnusedPrivateMember:ConversationEventParser.kt$ConversationEventParser$private fun logAgentToolResponse(jsonObject: JsonObject)</ID>
+    <ID>UnusedPrivateProperty:ConversationSessionImpl.kt$ConversationSessionImpl$private val context: Context</ID>
+    <ID>UnusedPrivateProperty:ConversationSessionImpl.kt$ConversationSessionImpl$private val room: Room? = null</ID>
+    <ID>UnusedPrivateProperty:WebRTCConnection.kt$WebRTCConnection$private val context: Context</ID>
+    <ID>UseCheckOrError:ConversationClientImpl.kt$ConversationSessionBuilder$throw IllegalStateException("Configuration is required")</ID>
+    <ID>UseCheckOrError:LiveKitAudioManager.kt$LiveKitAudioManager$throw IllegalStateException("Already playing")</ID>
+    <ID>UseCheckOrError:LiveKitAudioManager.kt$LiveKitAudioManager$throw IllegalStateException("Already recording")</ID>
+    <ID>UseCheckOrError:WebRTCConnection.kt$WebRTCConnection$throw IllegalStateException("Already connected or connecting")</ID>
+    <ID>UseCheckOrError:WebRTCConnection.kt$WebRTCConnection$throw IllegalStateException("Not connected")</ID>
+    <ID>UseCheckOrError:WebSocketConnection.kt$WebSocketConnection$throw IllegalStateException("Already connected or connecting")</ID>
+    <ID>UseCheckOrError:WebSocketConnection.kt$WebSocketConnection$throw IllegalStateException("Not connected")</ID>
+    <ID>UseCheckOrError:WebSocketConnection.kt$WebSocketConnection$throw IllegalStateException("WebSocket not initialized")</ID>
+    <ID>UseRequire:ClientToolRegistry.kt$ClientToolRegistry$throw IllegalArgumentException("Collection parameter too large: $key")</ID>
+    <ID>UseRequire:ClientToolRegistry.kt$ClientToolRegistry$throw IllegalArgumentException("Map parameter too large: $key")</ID>
+    <ID>UseRequire:ClientToolRegistry.kt$ClientToolRegistry$throw IllegalArgumentException("Parameter key too long: $key")</ID>
+    <ID>UseRequire:ClientToolRegistry.kt$ClientToolRegistry$throw IllegalArgumentException("String parameter too long: $key")</ID>
+    <ID>UseRequire:ClientToolRegistry.kt$ClientToolRegistry$throw IllegalArgumentException("Too many parameters (max 100)")</ID>
+    <ID>UseRequire:ClientToolRegistry.kt$ClientToolRegistry$throw IllegalArgumentException("Tool with name '$name' is already registered")</ID>
+    <ID>UtilityClassWithPublicConstructor:AudioPermissionManager.kt$AudioPermissionManager</ID>
+    <ID>WildcardImport:ClientToolRegistry.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:ConversationClientImplTest.kt$import io.mockk.*</ID>
+    <ID>WildcardImport:ConversationClientImplTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ConversationClientTest.kt$import io.mockk.*</ID>
+    <ID>WildcardImport:ConversationClientTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ConversationConfigTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ConversationEventHandler.kt$import io.elevenlabs.models.*</ID>
+    <ID>WildcardImport:ConversationEventHandler.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:ConversationEventParser.kt$import com.google.gson.*</ID>
+    <ID>WildcardImport:ConversationEventParserTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ConversationSessionBuilderTest.kt$import io.mockk.*</ID>
+    <ID>WildcardImport:ConversationSessionBuilderTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ConversationSessionImpl.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:DynamicClientToolTest.kt$import io.mockk.*</ID>
+    <ID>WildcardImport:DynamicClientToolTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:LiveKitAudioManager.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:WebRTCConnection.kt$import kotlinx.coroutines.*</ID>
+    <ID>WildcardImport:WebRTCConnection.kt$import kotlinx.coroutines.flow.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

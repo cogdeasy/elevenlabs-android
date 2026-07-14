@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:MainActivity.kt$mutedSpeechEvent != null &amp;&amp; (isMuted ?: false) &amp;&amp; effectiveStatus == ConversationStatus.CONNECTED &amp;&amp; !textOnlyMode</ID>
+    <ID>FunctionNaming:AppTheme.kt$@Composable fun AppTheme(content: @Composable () -> Unit)</ID>
+    <ID>FunctionNaming:MainActivity.kt$@Composable private fun AppRoot(viewModel: ConversationViewModel)</ID>
+    <ID>FunctionNaming:MainActivity.kt$@Composable private fun MutedSpeechBanner( modifier: Modifier = Modifier, onTap: () -> Unit, )</ID>
+    <ID>FunctionNaming:StartScreen.kt$@Composable fun StartScreen( textOnlyMode: Boolean, onToggleTextOnly: (Boolean) -> Unit, status: ConversationStatus, onConnect: () -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:StartScreen.kt$@Preview(showBackground = true, name = "Connecting") @Composable private fun StartScreenPreviewConnecting()</ID>
+    <ID>FunctionNaming:StartScreen.kt$@Preview(showBackground = true, name = "Disconnected — text-only") @Composable private fun StartScreenPreviewTextOnly()</ID>
+    <ID>FunctionNaming:StartScreen.kt$@Preview(showBackground = true, name = "Disconnected — voice") @Composable private fun StartScreenPreviewDisconnected()</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable fun TextChatScreen( status: ConversationStatus, messages: List&lt;TextChatMessage>, isAgentTyping: Boolean, errorMessage: String?, onSend: (String) -> Unit, onRetry: () -> Unit, onDisconnect: () -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable internal fun MessageList( messages: List&lt;TextChatMessage>, isAgentTyping: Boolean, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable private fun ChatHeader( status: ConversationStatus, onDisconnect: () -> Unit, )</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable private fun Composer( onSend: (String) -> Unit, enabled: Boolean, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable private fun ErrorState( message: String?, onRetry: () -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable private fun MessageBubble(message: TextChatMessage)</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable private fun TypingDot(delayMillis: Int)</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Composable private fun TypingIndicator()</ID>
+    <ID>FunctionNaming:TextChatScreen.kt$@Preview(showBackground = true) @Composable private fun TextChatScreenPreview()</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Composable fun VoiceScreen( status: ConversationStatus, mode: ConversationMode?, isMuted: Boolean, canSendFeedback: Boolean, messages: List&lt;TextChatMessage>, onDisconnect: () -> Unit, onToggleMute: () -> Unit, onSetVolume: (Float) -> Unit, onThumbsUp: () -> Unit, onThumbsDown: () -> Unit, onSendContextual: (String) -> Unit, onSendUserMessage: (String) -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Composable private fun MessageComposer( value: String, onValueChange: (String) -> Unit, onSendUser: () -> Unit, onSendContextual: () -> Unit, )</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Composable private fun ModeIndicator(mode: ConversationMode?)</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Composable private fun StatusCard(status: ConversationStatus)</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Composable private fun Transcript( messages: List&lt;TextChatMessage>, modifier: Modifier = Modifier, )</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Preview(showBackground = true, name = "Connected — listening") @Composable private fun VoiceScreenPreviewListening()</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Preview(showBackground = true, name = "Connected — speaking, muted") @Composable private fun VoiceScreenPreviewSpeakingMuted()</ID>
+    <ID>FunctionNaming:VoiceScreen.kt$@Preview(showBackground = true, name = "Connecting") @Composable private fun VoiceScreenPreviewConnecting()</ID>
+    <ID>LongMethod:ConversationViewModel.kt$ConversationViewModel$fun startConversation(activityContext: Context, textOnly: Boolean)</ID>
+    <ID>LongMethod:MainActivity.kt$@Composable private fun AppRoot(viewModel: ConversationViewModel)</ID>
+    <ID>LongMethod:VoiceScreen.kt$@Composable fun VoiceScreen( status: ConversationStatus, mode: ConversationMode?, isMuted: Boolean, canSendFeedback: Boolean, messages: List&lt;TextChatMessage>, onDisconnect: () -> Unit, onToggleMute: () -> Unit, onSetVolume: (Float) -> Unit, onThumbsUp: () -> Unit, onThumbsDown: () -> Unit, onSendContextual: (String) -> Unit, onSendUserMessage: (String) -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>MatchingDeclarationName:TextChatModels.kt$TextChatMessage</ID>
+    <ID>MaxLineLength:ConversationViewModel.kt$ConversationViewModel$Log.d(TAG, "onConversationInitiationMetadata: id=$conversationId, agentOut=$agentOutputFormat, userIn=$userInputFormat")</ID>
+    <ID>NewLineAtEndOfFile:ExampleUnitTest.kt$io.elevenlabs.android.ExampleUnitTest.kt</ID>
+    <ID>NewLineAtEndOfFile:UiState.kt$io.elevenlabs.example.models.UiState.kt</ID>
+    <ID>UnusedPrivateMember:StartScreen.kt$@Preview(showBackground = true, name = "Connecting") @Composable private fun StartScreenPreviewConnecting()</ID>
+    <ID>UnusedPrivateMember:StartScreen.kt$@Preview(showBackground = true, name = "Disconnected — text-only") @Composable private fun StartScreenPreviewTextOnly()</ID>
+    <ID>UnusedPrivateMember:StartScreen.kt$@Preview(showBackground = true, name = "Disconnected — voice") @Composable private fun StartScreenPreviewDisconnected()</ID>
+    <ID>UnusedPrivateMember:TextChatScreen.kt$@Preview(showBackground = true) @Composable private fun TextChatScreenPreview()</ID>
+    <ID>UnusedPrivateMember:VoiceScreen.kt$@Preview(showBackground = true, name = "Connected — listening") @Composable private fun VoiceScreenPreviewListening()</ID>
+    <ID>UnusedPrivateMember:VoiceScreen.kt$@Preview(showBackground = true, name = "Connected — speaking, muted") @Composable private fun VoiceScreenPreviewSpeakingMuted()</ID>
+    <ID>UnusedPrivateMember:VoiceScreen.kt$@Preview(showBackground = true, name = "Connecting") @Composable private fun VoiceScreenPreviewConnecting()</ID>
+    <ID>WildcardImport:ExampleUnitTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>
