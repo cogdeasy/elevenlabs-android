@@ -7,7 +7,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ConnectionStatusMappingTest {
-
     @Test
     fun `connected maps to CONNECTED`() {
         assertEquals(ConversationStatus.CONNECTED, ConnectionState.CONNECTED.toConversationStatus())

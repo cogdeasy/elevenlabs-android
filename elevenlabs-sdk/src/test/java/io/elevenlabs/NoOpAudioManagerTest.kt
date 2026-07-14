@@ -8,7 +8,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NoOpAudioManagerTest {
-
     @Test
     fun `defaults are sane`() {
         val manager = NoOpAudioManager()
@@ -21,18 +20,19 @@ class NoOpAudioManagerTest {
     }
 
     @Test
-    fun `recording and playback methods are inert`() = runTest {
-        val manager = NoOpAudioManager()
+    fun `recording and playback methods are inert`() =
+        runTest {
+            val manager = NoOpAudioManager()
 
-        manager.startRecording()
-        manager.startPlayback()
+            manager.startRecording()
+            manager.startPlayback()
 
-        assertFalse(manager.isRecording())
-        assertFalse(manager.isPlaying())
+            assertFalse(manager.isRecording())
+            assertFalse(manager.isPlaying())
 
-        manager.stopRecording()
-        manager.stopPlayback()
-    }
+            manager.stopRecording()
+            manager.stopPlayback()
+        }
 
     @Test
     fun `setVolume clamps to 0_0 - 1_0`() {
@@ -49,12 +49,13 @@ class NoOpAudioManagerTest {
     }
 
     @Test
-    fun `setMicMuted does not change mute state`() = runTest {
-        val manager = NoOpAudioManager()
+    fun `setMicMuted does not change mute state`() =
+        runTest {
+            val manager = NoOpAudioManager()
 
-        manager.setMicMuted(true)
-        assertFalse(manager.isMuted())
-    }
+            manager.setMicMuted(true)
+            assertFalse(manager.isMuted())
+        }
 
     @Test
     fun `cleanup does not throw`() {

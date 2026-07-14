@@ -33,9 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class WebSocketConnection(
     private val client: OkHttpClient = OkHttpClient(),
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
 ) : BaseConnection() {
-
     private val _connectionState = MutableStateFlow(ConnectionState.IDLE)
     override val connectionState: ConnectionState
         get() = _connectionState.value
@@ -54,7 +53,10 @@ class WebSocketConnection(
     @Volatile
     private var conversationIdNotified = false
 
-    override suspend fun connect(serverUrl: String, config: ConversationConfig) {
+    override suspend fun connect(
+        serverUrl: String,
+        config: ConversationConfig,
+    ) {
         if (connectionState != ConnectionState.IDLE && connectionState != ConnectionState.DISCONNECTED) {
             throw IllegalStateException("Already connected or connecting")
         }
@@ -106,10 +108,11 @@ class WebSocketConnection(
         }
         val ws = webSocket ?: throw IllegalStateException("WebSocket not initialized")
 
-        val text = when (message) {
-            is String -> message
-            else -> ConversationEventParser.serializeOutgoingEvent(message as OutgoingEvent)
-        }
+        val text =
+            when (message) {
+                is String -> message
+                else -> ConversationEventParser.serializeOutgoingEvent(message as OutgoingEvent)
+            }
 
         val sent = ws.send(text)
         if (!sent) {
@@ -130,55 +133,78 @@ class WebSocketConnection(
         scope.cancel()
     }
 
-    private val listener = object : WebSocketListener() {
-        override fun onOpen(webSocket: WebSocket, response: Response) {
-            Log.d("WebSocketConnection", "WebSocket opened")
-            updateConnectionState(ConnectionState.CONNECTED)
+    private val listener =
+        object : WebSocketListener() {
+            override fun onOpen(
+                webSocket: WebSocket,
+                response: Response,
+            ) {
+                Log.d("WebSocketConnection", "WebSocket opened")
+                updateConnectionState(ConnectionState.CONNECTED)
 
-            try {
-                val cfg = latestConfig ?: return
-                val payload = ConversationOverridesBuilder.constructOverrides(cfg).toString()
-                webSocket.send(payload)
-            } catch (e: Exception) {
-                Log.d("WebSocketConnection", "Failed to send initiation payload: ${e.message}")
+                try {
+                    val cfg = latestConfig ?: return
+                    val payload = ConversationOverridesBuilder.constructOverrides(cfg).toString()
+                    webSocket.send(payload)
+                } catch (e: Exception) {
+                    Log.d("WebSocketConnection", "Failed to send initiation payload: ${e.message}")
+                }
+            }
+
+            override fun onMessage(
+                webSocket: WebSocket,
+                text: String,
+            ) {
+                handleIncomingText(text)
+            }
+
+            override fun onMessage(
+                webSocket: WebSocket,
+                bytes: ByteString,
+            ) {
+                handleIncomingText(bytes.utf8())
+            }
+
+            override fun onClosing(
+                webSocket: WebSocket,
+                code: Int,
+                reason: String,
+            ) {
+                Log.d("WebSocketConnection", "WebSocket closing: code=$code reason=$reason")
+                webSocket.close(code, reason)
+            }
+
+            override fun onClosed(
+                webSocket: WebSocket,
+                code: Int,
+                reason: String,
+            ) {
+                Log.d("WebSocketConnection", "WebSocket closed: code=$code reason=$reason")
+                // Normal closure (1000) is treated as a user-initiated end. Anything else
+                // (going away, abnormal, server unreachable, etc.) is reported as an error
+                // because we cannot reliably tell from the close code alone whether the
+                // agent ended the conversation gracefully.
+                val details =
+                    if (code == NORMAL_CLOSURE) {
+                        DisconnectionDetails.User
+                    } else {
+                        DisconnectionDetails.Error(RuntimeException("WebSocket closed: $code $reason"))
+                    }
+                updateConnectionState(ConnectionState.DISCONNECTED)
+                invokeOnDisconnect(details)
+            }
+
+            override fun onFailure(
+                webSocket: WebSocket,
+                t: Throwable,
+                response: Response?,
+            ) {
+                Log.e("WebSocketConnection", "WebSocket failure: ${t.message}", t)
+                updateConnectionState(ConnectionState.ERROR)
+                val cause = if (t is Exception) t else RuntimeException(t)
+                invokeOnDisconnect(DisconnectionDetails.Error(cause))
             }
         }
-
-        override fun onMessage(webSocket: WebSocket, text: String) {
-            handleIncomingText(text)
-        }
-
-        override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-            handleIncomingText(bytes.utf8())
-        }
-
-        override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-            Log.d("WebSocketConnection", "WebSocket closing: code=$code reason=$reason")
-            webSocket.close(code, reason)
-        }
-
-        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-            Log.d("WebSocketConnection", "WebSocket closed: code=$code reason=$reason")
-            // Normal closure (1000) is treated as a user-initiated end. Anything else
-            // (going away, abnormal, server unreachable, etc.) is reported as an error
-            // because we cannot reliably tell from the close code alone whether the
-            // agent ended the conversation gracefully.
-            val details = if (code == NORMAL_CLOSURE) {
-                DisconnectionDetails.User
-            } else {
-                DisconnectionDetails.Error(RuntimeException("WebSocket closed: $code $reason"))
-            }
-            updateConnectionState(ConnectionState.DISCONNECTED)
-            invokeOnDisconnect(details)
-        }
-
-        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-            Log.e("WebSocketConnection", "WebSocket failure: ${t.message}", t)
-            updateConnectionState(ConnectionState.ERROR)
-            val cause = if (t is Exception) t else RuntimeException(t)
-            invokeOnDisconnect(DisconnectionDetails.Error(cause))
-        }
-    }
 
     private fun handleIncomingText(text: String) {
         messageChannel.trySend(text)
@@ -201,9 +227,10 @@ class WebSocketConnection(
 
             // Server nests the payload under conversation_initiation_metadata_event;
             // the unsuffixed key and flat root are tolerated for forwards/backwards compatibility.
-            val meta = obj.optJSONObject("conversation_initiation_metadata_event")
-                ?: obj.optJSONObject("conversation_initiation_metadata")
-                ?: obj
+            val meta =
+                obj.optJSONObject("conversation_initiation_metadata_event")
+                    ?: obj.optJSONObject("conversation_initiation_metadata")
+                    ?: obj
             val id = meta.optString("conversation_id", "")
             if (id.isEmpty()) return
 
@@ -219,11 +246,12 @@ class WebSocketConnection(
     }
 
     private fun startMessageProcessing() {
-        messageJob = scope.launch {
-            messageChannel.consumeAsFlow().collect { msg ->
-                messageListener?.invoke(msg)
+        messageJob =
+            scope.launch {
+                messageChannel.consumeAsFlow().collect { msg ->
+                    messageListener?.invoke(msg)
+                }
             }
-        }
     }
 
     private fun updateConnectionState(newState: ConnectionState) {
@@ -250,7 +278,11 @@ class WebSocketConnection(
         private const val WS_PATH = "/v1/convai/conversation"
         private const val NORMAL_CLOSURE = 1000
 
-        internal fun buildWebSocketUrl(serverUrl: String, signedUrl: String?, agentId: String?): String {
+        internal fun buildWebSocketUrl(
+            serverUrl: String,
+            signedUrl: String?,
+            agentId: String?,
+        ): String {
             // Private agent: open the backend-issued signed URL verbatim.
             if (!signedUrl.isNullOrBlank()) {
                 require(signedUrl.startsWith("ws://") || signedUrl.startsWith("wss://")) {
@@ -264,10 +296,11 @@ class WebSocketConnection(
             require(!agentId.isNullOrBlank()) {
                 "WebSocket connection requires either signedUrl (private) or agentId (public)"
             }
-            val base = serverUrl
-                .replaceFirst("https://", "wss://")
-                .replaceFirst("http://", "ws://")
-                .trimEnd('/')
+            val base =
+                serverUrl
+                    .replaceFirst("https://", "wss://")
+                    .replaceFirst("http://", "ws://")
+                    .trimEnd('/')
             return "$base$WS_PATH?agent_id=$agentId"
         }
     }

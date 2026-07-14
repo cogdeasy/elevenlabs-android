@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,7 +30,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -53,7 +51,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.elevenlabs.example.models.TextChatMessage
 import io.elevenlabs.models.ConversationStatus
 
@@ -80,9 +77,10 @@ fun TextChatScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .imePadding(),
         ) {
             ChatHeader(status = status, onDisconnect = onDisconnect)
 
@@ -103,9 +101,10 @@ fun TextChatScreen(
             Composer(
                 onSend = onSend,
                 enabled = status == ConversationStatus.CONNECTED,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
             )
         }
     }
@@ -117,9 +116,10 @@ private fun ChatHeader(
     onDisconnect: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -183,14 +183,14 @@ private fun MessageBubble(message: TextChatMessage) {
             horizontalArrangement = Arrangement.End,
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .wrapContentWidth(Alignment.End)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(20.dp),
-                    )
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.85f)
+                        .wrapContentWidth(Alignment.End)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(20.dp),
+                        ).padding(horizontal = 16.dp, vertical = 10.dp),
             ) {
                 Text(
                     text = message.content,
@@ -205,14 +205,14 @@ private fun MessageBubble(message: TextChatMessage) {
             horizontalArrangement = Arrangement.Start,
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .wrapContentWidth(Alignment.Start)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(20.dp),
-                    )
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.85f)
+                        .wrapContentWidth(Alignment.Start)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(20.dp),
+                        ).padding(horizontal = 16.dp, vertical = 10.dp),
             ) {
                 Text(
                     text = message.content,
@@ -231,12 +231,12 @@ private fun TypingIndicator() {
         horizontalArrangement = Arrangement.Start,
     ) {
         Box(
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(20.dp),
-                )
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(20.dp),
+                    ).padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -256,23 +256,26 @@ private fun TypingDot(delayMillis: Int) {
     val alpha by transition.animateFloat(
         initialValue = 0.3f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 600,
-                delayMillis = delayMillis,
-                easing = LinearEasing
+        animationSpec =
+            infiniteRepeatable(
+                animation =
+                    tween(
+                        durationMillis = 600,
+                        delayMillis = delayMillis,
+                        easing = LinearEasing,
+                    ),
+                repeatMode = RepeatMode.Reverse,
             ),
-            repeatMode = RepeatMode.Reverse,
-        ),
         label = "alpha",
     )
     Box(
-        modifier = Modifier
-            .size(8.dp)
-            .background(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-                shape = CircleShape,
-            ),
+        modifier =
+            Modifier
+                .size(8.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                    shape = CircleShape,
+                ),
     )
 }
 
@@ -293,23 +296,25 @@ private fun Composer(
     }
 
     Row(
-        modifier = modifier
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(28.dp),
-            )
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier =
+            modifier
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(28.dp),
+                ).padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BasicTextField(
             value = text,
             onValueChange = { text = it.take(MAX_INPUT_LENGTH) },
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-            ),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+            textStyle =
+                MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
             singleLine = true,
             enabled = enabled,
@@ -333,14 +338,15 @@ private fun Composer(
             onClick = { submit() },
             enabled = canSend,
             modifier = Modifier.size(40.dp),
-            colors = IconButtonDefaults.iconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                disabledContainerColor = MaterialTheme.colorScheme.surface,
-                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
+            colors =
+                IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surface,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
         ) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = null)
+            Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
         }
     }
 }
@@ -352,9 +358,10 @@ private fun ErrorState(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -370,13 +377,14 @@ private fun ErrorState(
     }
 }
 
-private fun statusLabel(status: ConversationStatus): String = when (status) {
-    ConversationStatus.CONNECTED -> "Connected"
-    ConversationStatus.CONNECTING -> "Connecting…"
-    ConversationStatus.DISCONNECTED -> "Disconnected"
-    ConversationStatus.DISCONNECTING -> "Disconnecting…"
-    ConversationStatus.ERROR -> "Error"
-}
+private fun statusLabel(status: ConversationStatus): String =
+    when (status) {
+        ConversationStatus.CONNECTED -> "Connected"
+        ConversationStatus.CONNECTING -> "Connecting…"
+        ConversationStatus.DISCONNECTED -> "Disconnected"
+        ConversationStatus.DISCONNECTING -> "Disconnecting…"
+        ConversationStatus.ERROR -> "Error"
+    }
 
 @Preview(showBackground = true)
 @Composable
@@ -384,14 +392,15 @@ private fun TextChatScreenPreview() {
     AppTheme {
         TextChatScreen(
             status = ConversationStatus.CONNECTED,
-            messages = listOf(
-                TextChatMessage("1", "Hello, what can you do?", isFromUser = true),
-                TextChatMessage(
-                    "2",
-                    "I can help you explore ElevenLabs Conversational AI.",
-                    isFromUser = false
+            messages =
+                listOf(
+                    TextChatMessage("1", "Hello, what can you do?", isFromUser = true),
+                    TextChatMessage(
+                        "2",
+                        "I can help you explore ElevenLabs Conversational AI.",
+                        isFromUser = false,
+                    ),
                 ),
-            ),
             isAgentTyping = true,
             errorMessage = null,
             onSend = {},

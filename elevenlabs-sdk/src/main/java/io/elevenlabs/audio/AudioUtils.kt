@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
-import android.media.AudioManager as SystemAudioManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+import android.media.AudioManager as SystemAudioManager
 
 /**
  * Audio utilities for Android-specific functionality
@@ -22,12 +22,11 @@ object AudioUtils {
      * @param context Android context
      * @return true if permission is granted
      */
-    fun hasAudioPermission(context: Context): Boolean {
-        return ContextCompat.checkSelfPermission(
+    fun hasAudioPermission(context: Context): Boolean =
+        ContextCompat.checkSelfPermission(
             context,
-            Manifest.permission.RECORD_AUDIO
+            Manifest.permission.RECORD_AUDIO,
         ) == PackageManager.PERMISSION_GRANTED
-    }
 
     /**
      * Configure audio session for voice communication
@@ -49,16 +48,20 @@ object AudioUtils {
      */
     private fun requestAudioFocus(audioManager: SystemAudioManager) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                .build()
+            val audioAttributes =
+                AudioAttributes
+                    .Builder()
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
 
-            val focusRequest = AudioFocusRequest.Builder(SystemAudioManager.AUDIOFOCUS_GAIN)
-                .setAudioAttributes(audioAttributes)
-                .setAcceptsDelayedFocusGain(true)
-                .setOnAudioFocusChangeListener { /* no-op */ }
-                .build()
+            val focusRequest =
+                AudioFocusRequest
+                    .Builder(SystemAudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(audioAttributes)
+                    .setAcceptsDelayedFocusGain(true)
+                    .setOnAudioFocusChangeListener { /* no-op */ }
+                    .build()
 
             audioManager.requestAudioFocus(focusRequest)
         } else {
@@ -66,7 +69,7 @@ object AudioUtils {
             audioManager.requestAudioFocus(
                 { /* no-op */ },
                 SystemAudioManager.STREAM_VOICE_CALL,
-                SystemAudioManager.AUDIOFOCUS_GAIN
+                SystemAudioManager.AUDIOFOCUS_GAIN,
             )
         }
     }
@@ -92,7 +95,10 @@ object AudioUtils {
      * @param context Android context
      * @param muted true to mute microphone, false to unmute
      */
-    fun setMicrophoneMuted(context: Context, muted: Boolean) {
+    fun setMicrophoneMuted(
+        context: Context,
+        muted: Boolean,
+    ) {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as SystemAudioManager
         audioManager.isMicrophoneMute = muted
     }

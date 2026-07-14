@@ -13,7 +13,9 @@ sealed class DisconnectionDetails {
      * Disconnection due to an error
      * @param message Description of the error that occurred
      */
-    data class Error(val exception: Exception) : DisconnectionDetails()
+    data class Error(
+        val exception: Exception,
+    ) : DisconnectionDetails()
 
     /**
      * Disconnection initiated by the agent
@@ -29,10 +31,10 @@ sealed class DisconnectionDetails {
      * Get the reason as a string identifier
      */
     val reason: String
-        get() = when (this) {
-            is Error -> "error"
-            is Agent -> "agent"
-            is User -> "user"
-        }
+        get() =
+            when (this) {
+                is Error -> "error"
+                is Agent -> "agent"
+                is User -> "user"
+            }
 }
-

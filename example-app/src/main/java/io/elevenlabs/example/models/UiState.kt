@@ -5,8 +5,12 @@ package io.elevenlabs.example.models
  */
 sealed class UiState {
     object Idle : UiState()
+
     object Connecting : UiState()
+
     object Connected : UiState()
+
     object Disconnecting : UiState()
+
     object Error : UiState()
 }

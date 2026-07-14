@@ -25,8 +25,9 @@ import kotlinx.coroutines.launch
  * reconciled [io.elevenlabs.ConversationSession.messages], mapped to the UI model, so chat bubbles
  * render the same source of truth for either modality.
  */
-class ConversationViewModel(application: Application) : AndroidViewModel(application) {
-
+class ConversationViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private var currentSession: ConversationSession? = null
 
     // Whether the active (or most recent) session was started in text-only mode. Used by retry().
@@ -77,7 +78,10 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     private val _isAgentTyping = MutableStateFlow(false)
     val isAgentTyping: StateFlow<Boolean> = _isAgentTyping.asStateFlow()
 
-    fun startConversation(activityContext: Context, textOnly: Boolean) {
+    fun startConversation(
+        activityContext: Context,
+        textOnly: Boolean,
+    ) {
         if (currentSession != null && _uiState.value != UiState.Idle && _uiState.value !is UiState.Error) {
             Log.d(TAG, "Session already active or connecting.")
             return
@@ -91,105 +95,113 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
 
         viewModelScope.launch {
             try {
-                val config = io.elevenlabs.ConversationConfig(
-                    agentId = "<your_agent_id>", // Replace with your agent ID
-                    conversationToken = null,
-                    userId = "demo-user",
-                    textOnly = textOnly,
-                    overrides = null,
-                    customLlmExtraBody = null,
-                    dynamicVariables = null,
-                    clientTools = mapOf(
-                        "logMessage" to object : io.elevenlabs.ClientTool {
-                            override suspend fun execute(parameters: Map<String, Any>): io.elevenlabs.ClientToolResult? {
-                                val message = parameters["message"] as? String
-                                    ?: return io.elevenlabs.ClientToolResult.failure("Missing 'message' parameter")
-                                val level = parameters["level"] as? String ?: "INFO"
+                val config =
+                    io.elevenlabs.ConversationConfig(
+                        agentId = "<your_agent_id>", // Replace with your agent ID
+                        conversationToken = null,
+                        userId = "demo-user",
+                        textOnly = textOnly,
+                        overrides = null,
+                        customLlmExtraBody = null,
+                        dynamicVariables = null,
+                        clientTools =
+                            mapOf(
+                                "logMessage" to
+                                    object : io.elevenlabs.ClientTool {
+                                        override suspend fun execute(parameters: Map<String, Any>): io.elevenlabs.ClientToolResult? {
+                                            val message =
+                                                parameters["message"] as? String
+                                                    ?: return io.elevenlabs.ClientToolResult.failure("Missing 'message' parameter")
+                                            val level = parameters["level"] as? String ?: "INFO"
 
-                                Log.d("ExampleApp", "[$level] Client Tool Log: $message")
-                                return io.elevenlabs.ClientToolResult.success("Message logged successfully")
-                            }
-                        }
-                    ),
-                    onConnect = { conversationId ->
-                        Log.d(TAG, "Connected id=$conversationId")
-                    },
-                    onDisconnect = { reason ->
-                        Log.d(TAG, "onDisconnect: $reason")
-                        _isAgentTyping.value = false
-                    },
-                    onMessage = { source, message ->
-                        // Receive messages from the server. Can be quite noisy hence commented out
-                        // Log.d(TAG, "onMessage [$source]: $message")
-                    },
-                    onModeChange = { mode: ConversationMode ->
-                        _mode.postValue(mode)
-                    },
-                    onStatusChange = { status ->
-                        Log.d(TAG, "onStatusChange: $status")
-                    },
-                    onCanSendFeedbackChange = { canSendFeedback ->
-                        _canSendFeedback.postValue(canSendFeedback)
-                        Log.d(TAG, "onCanSendFeedbackChange: $canSendFeedback")
-                    },
-                    onUnhandledClientToolCall = { toolCall ->
-                        Log.d(TAG, "onUnhandledClientToolCall: $toolCall")
-                    },
-                    onVadScore = { score ->
-                        // VAD score is used to determine if the user is speaking.
-                        // Can be used to trigger UI changes or audio processing decisions.
-                        // Log commented out as it's quite noisy
-                        // Log.d(TAG, "onVadScore: $score")
-                    },
-                    onAudioLevelChanged = { level ->
-                        // Agent audio level (volume)
-                        // Commented out as it's quite noisy
-                        // Log.d(TAG, "audioLevel: $level")
-                    },
-                    onAudioFrame = { frame ->
-                        // Log.d(TAG, "onAudioFrame: ${frame.numberOfFrames} frames @ ${frame.sampleRate}Hz")
-                    },
-                    onUserTranscriptEvent = { transcript, eventId ->
-                        Log.d(TAG, "onUserTranscript: text='$transcript', eventId=$eventId")
-                    },
-                    onTentativeUserTranscriptEvent = { transcript, eventId ->
-                        Log.d(TAG, "onTentativeUserTranscript: text='$transcript', eventId=$eventId")
-                    },
-                    onAudioAlignment = { alignment ->
-                        Log.d(TAG, "onAudioAlignment: $alignment")
-                    },
-                    onAgentResponseEvent = { response, eventId ->
-                        Log.d(TAG, "onAgentResponse: text='$response', eventId=$eventId")
-                    },
-                    onAgentResponsePartEvent = { partType, text, eventId ->
-                        Log.d(TAG, "onAgentResponsePart: partType=$partType, text='$text', eventId=$eventId")
-                    },
-                    onAgentResponseMetadata = { metadata ->
-                        Log.d(TAG, "onAgentResponseMetadata: $metadata")
-                    },
-                    onAgentResponseCorrectionEvent = { correctedResponse, eventId ->
-                        Log.d(TAG, "onAgentResponseCorrection: corrected='$correctedResponse', eventId=$eventId")
-                    },
-                    onAgentToolResponse = { toolName, toolCallId, toolType, isError ->
-                        Log.d(TAG, "onAgentToolResponse: tool=$toolName, callId=$toolCallId, type=$toolType, isError=$isError")
-                    },
-                    onConversationInitiationMetadata = { conversationId, agentOutputFormat, userInputFormat ->
-                        Log.d(TAG, "onConversationInitiationMetadata: id=$conversationId, agentOut=$agentOutputFormat, userIn=$userInputFormat")
-                    },
-                    onInterruption = { eventId ->
-                        Log.d(TAG, "onInterruption: eventId=$eventId")
-                    },
-                    onError = { code, message ->
-                        Log.e(TAG, "onError: Server error ($code): ${message ?: "unknown"}")
-                        _errorMessage.postValue("Server error ($code): ${message ?: "unknown"}")
-                    },
-                    audioConfiguration = io.elevenlabs.AudioPipelineConfiguration(
-                        useSoftwareMute = true,
-                        onMutedSpeech = { event ->
-                            _mutedSpeechEvent.postValue(event.audioLevel)
+                                            Log.d("ExampleApp", "[$level] Client Tool Log: $message")
+                                            return io.elevenlabs.ClientToolResult.success("Message logged successfully")
+                                        }
+                                    },
+                            ),
+                        onConnect = { conversationId ->
+                            Log.d(TAG, "Connected id=$conversationId")
                         },
-                    ),
-                )
+                        onDisconnect = { reason ->
+                            Log.d(TAG, "onDisconnect: $reason")
+                            _isAgentTyping.value = false
+                        },
+                        onMessage = { source, message ->
+                            // Receive messages from the server. Can be quite noisy hence commented out
+                            // Log.d(TAG, "onMessage [$source]: $message")
+                        },
+                        onModeChange = { mode: ConversationMode ->
+                            _mode.postValue(mode)
+                        },
+                        onStatusChange = { status ->
+                            Log.d(TAG, "onStatusChange: $status")
+                        },
+                        onCanSendFeedbackChange = { canSendFeedback ->
+                            _canSendFeedback.postValue(canSendFeedback)
+                            Log.d(TAG, "onCanSendFeedbackChange: $canSendFeedback")
+                        },
+                        onUnhandledClientToolCall = { toolCall ->
+                            Log.d(TAG, "onUnhandledClientToolCall: $toolCall")
+                        },
+                        onVadScore = { score ->
+                            // VAD score is used to determine if the user is speaking.
+                            // Can be used to trigger UI changes or audio processing decisions.
+                            // Log commented out as it's quite noisy
+                            // Log.d(TAG, "onVadScore: $score")
+                        },
+                        onAudioLevelChanged = { level ->
+                            // Agent audio level (volume)
+                            // Commented out as it's quite noisy
+                            // Log.d(TAG, "audioLevel: $level")
+                        },
+                        onAudioFrame = { frame ->
+                            // Log.d(TAG, "onAudioFrame: ${frame.numberOfFrames} frames @ ${frame.sampleRate}Hz")
+                        },
+                        onUserTranscriptEvent = { transcript, eventId ->
+                            Log.d(TAG, "onUserTranscript: text='$transcript', eventId=$eventId")
+                        },
+                        onTentativeUserTranscriptEvent = { transcript, eventId ->
+                            Log.d(TAG, "onTentativeUserTranscript: text='$transcript', eventId=$eventId")
+                        },
+                        onAudioAlignment = { alignment ->
+                            Log.d(TAG, "onAudioAlignment: $alignment")
+                        },
+                        onAgentResponseEvent = { response, eventId ->
+                            Log.d(TAG, "onAgentResponse: text='$response', eventId=$eventId")
+                        },
+                        onAgentResponsePartEvent = { partType, text, eventId ->
+                            Log.d(TAG, "onAgentResponsePart: partType=$partType, text='$text', eventId=$eventId")
+                        },
+                        onAgentResponseMetadata = { metadata ->
+                            Log.d(TAG, "onAgentResponseMetadata: $metadata")
+                        },
+                        onAgentResponseCorrectionEvent = { correctedResponse, eventId ->
+                            Log.d(TAG, "onAgentResponseCorrection: corrected='$correctedResponse', eventId=$eventId")
+                        },
+                        onAgentToolResponse = { toolName, toolCallId, toolType, isError ->
+                            Log.d(TAG, "onAgentToolResponse: tool=$toolName, callId=$toolCallId, type=$toolType, isError=$isError")
+                        },
+                        onConversationInitiationMetadata = { conversationId, agentOutputFormat, userInputFormat ->
+                            Log.d(
+                                TAG,
+                                "onConversationInitiationMetadata: id=$conversationId, agentOut=$agentOutputFormat, userIn=$userInputFormat",
+                            )
+                        },
+                        onInterruption = { eventId ->
+                            Log.d(TAG, "onInterruption: eventId=$eventId")
+                        },
+                        onError = { code, message ->
+                            Log.e(TAG, "onError: Server error ($code): ${message ?: "unknown"}")
+                            _errorMessage.postValue("Server error ($code): ${message ?: "unknown"}")
+                        },
+                        audioConfiguration =
+                            io.elevenlabs.AudioPipelineConfiguration(
+                                useSoftwareMute = true,
+                                onMutedSpeech = { event ->
+                                    _mutedSpeechEvent.postValue(event.audioLevel)
+                                },
+                            ),
+                    )
 
                 val session = ConversationClient.startSession(config, activityContext)
 
@@ -199,13 +211,15 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
                 viewModelScope.launch {
                     session.status.collect { status ->
                         _sessionStatus.postValue(status)
-                        _uiState.postValue(when (status) {
-                            ConversationStatus.CONNECTED -> UiState.Connected
-                            ConversationStatus.CONNECTING -> UiState.Connecting
-                            ConversationStatus.DISCONNECTED -> UiState.Idle
-                            ConversationStatus.DISCONNECTING -> UiState.Disconnecting
-                            ConversationStatus.ERROR -> UiState.Error
-                        })
+                        _uiState.postValue(
+                            when (status) {
+                                ConversationStatus.CONNECTED -> UiState.Connected
+                                ConversationStatus.CONNECTING -> UiState.Connecting
+                                ConversationStatus.DISCONNECTED -> UiState.Idle
+                                ConversationStatus.DISCONNECTING -> UiState.Disconnecting
+                                ConversationStatus.ERROR -> UiState.Error
+                            },
+                        )
 
                         if (status == ConversationStatus.ERROR) {
                             _errorMessage.postValue("Connection failed. Please try again.")
@@ -238,7 +252,6 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
                 // }
 
                 Log.d(TAG, "Session created and started successfully (textOnly=$textOnly)")
-
             } catch (e: Exception) {
                 Log.e(TAG, "Error starting conversation: ${e.message}", e)
                 _errorMessage.postValue("Failed to start conversation: ${e.localizedMessage ?: e.message}")
@@ -359,11 +372,12 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
         _isAgentTyping.value = false
     }
 
-    private fun Message.toTextChatMessage() = TextChatMessage(
-        id = id,
-        content = content,
-        isFromUser = role == MessageRole.USER,
-    )
+    private fun Message.toTextChatMessage() =
+        TextChatMessage(
+            id = id,
+            content = content,
+            isFromUser = role == MessageRole.USER,
+        )
 
     override fun onCleared() {
         super.onCleared()

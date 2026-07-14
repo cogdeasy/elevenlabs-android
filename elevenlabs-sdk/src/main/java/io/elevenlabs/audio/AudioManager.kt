@@ -8,7 +8,6 @@ package io.elevenlabs.audio
  * mute/unmute functionality, and audio session configuration for optimal quality.
  */
 interface AudioManager {
-
     /**
      * Start recording from the microphone
      * @throws SecurityException if audio permission is not granted
@@ -126,5 +125,8 @@ interface AudioStateListener {
      * @param error Description of the error
      * @param exception Optional exception that caused the error
      */
-    fun onAudioError(error: String, exception: Throwable? = null) {}
+    fun onAudioError(
+        error: String,
+        exception: Throwable? = null,
+    ) {}
 }

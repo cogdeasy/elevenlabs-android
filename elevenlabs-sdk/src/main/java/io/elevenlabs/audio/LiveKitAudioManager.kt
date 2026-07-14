@@ -5,9 +5,13 @@ import android.util.Log
 import io.livekit.android.room.Room
 import io.livekit.android.room.track.LocalAudioTrack
 import io.livekit.android.room.track.RemoteAudioTrack
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 /**
  * LiveKit-based audio implementation
@@ -19,9 +23,8 @@ import kotlinx.coroutines.flow.StateFlow
 class LiveKitAudioManager(
     private val context: Context,
     private val room: Room,
-    private val softwareMuteProcessor: SoftwareMuteProcessor? = null
+    private val softwareMuteProcessor: SoftwareMuteProcessor? = null,
 ) : AudioManager {
-
     private var localAudioTrack: LocalAudioTrack? = null
     private var remoteAudioTracks: MutableList<RemoteAudioTrack> = mutableListOf()
 
@@ -57,7 +60,6 @@ class LiveKitAudioManager(
 
             _isRecording.value = true
             audioStateListener?.onRecordingStateChanged(true)
-
         } catch (e: Exception) {
             audioStateListener?.onAudioError("Failed to start recording", e)
             Log.d("LiveKitAudioManager", "Failed to start recording - ${e.message}")
@@ -79,7 +81,6 @@ class LiveKitAudioManager(
 
             _isRecording.value = false
             audioStateListener?.onRecordingStateChanged(false)
-
         } catch (e: Exception) {
             audioStateListener?.onAudioError("Failed to stop recording", e)
             Log.d("LiveKitAudioManager", "Failed to stop recording - ${e.message}")
@@ -94,7 +95,6 @@ class LiveKitAudioManager(
         try {
             _isPlaying.value = true
             audioStateListener?.onPlaybackStateChanged(true)
-
         } catch (e: Exception) {
             audioStateListener?.onAudioError("Failed to start playback", e)
             throw e
@@ -112,7 +112,6 @@ class LiveKitAudioManager(
 
             _isPlaying.value = false
             audioStateListener?.onPlaybackStateChanged(false)
-
         } catch (e: Exception) {
             audioStateListener?.onAudioError("Failed to stop playback", e)
         }
@@ -155,7 +154,6 @@ class LiveKitAudioManager(
 
             _volume.value = clampedVolume
             audioStateListener?.onVolumeChanged(clampedVolume)
-
         } catch (e: Exception) {
             audioStateListener?.onAudioError("Failed to set volume", e)
         }

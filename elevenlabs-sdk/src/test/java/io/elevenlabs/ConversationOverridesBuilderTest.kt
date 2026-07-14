@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ConversationOverridesBuilderTest {
-
     @Test
     fun `minimal config yields only the type field`() {
         val config = ConversationConfig(agentId = "agent_1")
@@ -22,16 +21,19 @@ class ConversationOverridesBuilderTest {
 
     @Test
     fun `agent overrides are nested under conversation_config_override`() {
-        val config = ConversationConfig(
-            agentId = "agent_1",
-            overrides = Overrides(
-                agent = AgentOverrides(
-                    prompt = PromptOverrides(prompt = "Be terse"),
-                    firstMessage = "Hello!",
-                    language = Language.DE
-                )
+        val config =
+            ConversationConfig(
+                agentId = "agent_1",
+                overrides =
+                    Overrides(
+                        agent =
+                            AgentOverrides(
+                                prompt = PromptOverrides(prompt = "Be terse"),
+                                firstMessage = "Hello!",
+                                language = Language.DE,
+                            ),
+                    ),
             )
-        )
         val json = ConversationOverridesBuilder.constructOverrides(config)
 
         val agent = json.getJSONObject("conversation_config_override").getJSONObject("agent")
@@ -42,13 +44,15 @@ class ConversationOverridesBuilderTest {
 
     @Test
     fun `tts and conversation overrides are serialized`() {
-        val config = ConversationConfig(
-            agentId = "agent_1",
-            overrides = Overrides(
-                tts = TtsOverrides(voiceId = "voice_9"),
-                conversation = ConversationOverrides(textOnly = true)
+        val config =
+            ConversationConfig(
+                agentId = "agent_1",
+                overrides =
+                    Overrides(
+                        tts = TtsOverrides(voiceId = "voice_9"),
+                        conversation = ConversationOverrides(textOnly = true),
+                    ),
             )
-        )
         val json = ConversationOverridesBuilder.constructOverrides(config)
 
         val override = json.getJSONObject("conversation_config_override")
@@ -66,11 +70,12 @@ class ConversationOverridesBuilderTest {
 
     @Test
     fun `custom llm extra body and dynamic variables are passed through`() {
-        val config = ConversationConfig(
-            agentId = "agent_1",
-            customLlmExtraBody = mapOf("temperature" to 0.5),
-            dynamicVariables = mapOf("name" to "Ada")
-        )
+        val config =
+            ConversationConfig(
+                agentId = "agent_1",
+                customLlmExtraBody = mapOf("temperature" to 0.5),
+                dynamicVariables = mapOf("name" to "Ada"),
+            )
         val json = ConversationOverridesBuilder.constructOverrides(config)
 
         assertEquals(0.5, json.getJSONObject("custom_llm_extra_body").getDouble("temperature"), 0.0)
@@ -79,13 +84,15 @@ class ConversationOverridesBuilderTest {
 
     @Test
     fun `user id and client source info are serialized`() {
-        val config = ConversationConfig(
-            agentId = "agent_1",
-            userId = "user_7",
-            overrides = Overrides(
-                client = ClientOverrides(source = "android_sdk", version = "0.11")
+        val config =
+            ConversationConfig(
+                agentId = "agent_1",
+                userId = "user_7",
+                overrides =
+                    Overrides(
+                        client = ClientOverrides(source = "android_sdk", version = "0.11"),
+                    ),
             )
-        )
         val json = ConversationOverridesBuilder.constructOverrides(config)
 
         assertEquals("user_7", json.getString("user_id"))

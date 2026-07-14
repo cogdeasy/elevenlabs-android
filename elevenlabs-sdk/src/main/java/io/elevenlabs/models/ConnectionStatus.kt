@@ -25,8 +25,8 @@ interface Status {
  * Extension function to convert ConnectionState to ConversationStatus
  * Centralizes the mapping logic and makes it more maintainable.
  */
-fun io.elevenlabs.network.ConnectionState.toConversationStatus(): ConversationStatus {
-    return when (this) {
+fun io.elevenlabs.network.ConnectionState.toConversationStatus(): ConversationStatus =
+    when (this) {
         io.elevenlabs.network.ConnectionState.CONNECTED -> ConversationStatus.CONNECTED
         io.elevenlabs.network.ConnectionState.CONNECTING -> ConversationStatus.CONNECTING
         io.elevenlabs.network.ConnectionState.DISCONNECTED -> ConversationStatus.DISCONNECTED
@@ -34,4 +34,3 @@ fun io.elevenlabs.network.ConnectionState.toConversationStatus(): ConversationSt
         // IDLE and RECONNECTING map to DISCONNECTED for conversation purposes
         else -> ConversationStatus.DISCONNECTED
     }
-}

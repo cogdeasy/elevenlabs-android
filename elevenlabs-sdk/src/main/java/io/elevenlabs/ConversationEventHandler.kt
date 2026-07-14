@@ -2,12 +2,20 @@ package io.elevenlabs
 
 import android.util.Log
 import io.elevenlabs.audio.AudioManager
-import io.elevenlabs.models.*
+import io.elevenlabs.models.AgentResponsePartType
+import io.elevenlabs.models.ConversationEvent
+import io.elevenlabs.models.ConversationMode
+import io.elevenlabs.models.Message
+import io.elevenlabs.models.MessageRole
 import io.elevenlabs.network.OutgoingEvent
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Event processing pipeline for real-time conversation
@@ -36,9 +44,8 @@ class ConversationEventHandler(
     private val onConversationInitiationMetadata: ((String, String, String) -> Unit)? = null,
     private val onInterruption: ((Int) -> Unit)? = null,
     private val onEndCall: (suspend () -> Unit)? = null,
-    private val onError: ((Int, String?) -> Unit)? = null
+    private val onError: ((Int, String?) -> Unit)? = null,
 ) {
-
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     // State management
@@ -76,7 +83,6 @@ class ConversationEventHandler(
                 is ConversationEvent.ConversationInitiationMetadata -> handleConversationInitiationMetadata(event)
                 is ConversationEvent.Interruption -> handleInterruption(event)
                 is ConversationEvent.ServerError -> handleServerError(event)
-
             }
         } catch (e: Exception) {
             Log.d("ConvEventHandler", "Error handling conversation event: ${e.message}")
@@ -91,19 +97,28 @@ class ConversationEventHandler(
         appendAgentResponsePart(text = event.text, eventId = event.eventId, isStop = event.partType == "stop")
 
         AgentResponsePartType.fromString(event.partType)?.let { partType ->
-            try { onAgentResponsePartEvent?.invoke(partType, event.text, event.eventId) } catch (_: Throwable) {}
+            try {
+                onAgentResponsePartEvent?.invoke(partType, event.text, event.eventId)
+            } catch (_: Throwable) {
+            }
         }
 
         when (event.partType) {
             "start" -> {
                 _conversationMode.value = ConversationMode.SPEAKING
                 if (!audioManager.isPlaying()) {
-                    try { audioManager.startPlayback() } catch (_: Throwable) {}
+                    try {
+                        audioManager.startPlayback()
+                    } catch (_: Throwable) {
+                    }
                 }
             }
             "delta" -> {
                 if (event.text.isNotEmpty()) {
-                    try { onAgentResponse?.invoke(event.text) } catch (_: Throwable) {}
+                    try {
+                        onAgentResponse?.invoke(event.text)
+                    } catch (_: Throwable) {
+                    }
                 }
             }
             "stop" -> {
@@ -117,29 +132,44 @@ class ConversationEventHandler(
      */
     private suspend fun handleTentativeUserTranscript(event: ConversationEvent.TentativeUserTranscript) {
         applyTentativeUserTranscript(content = event.userTranscript, eventId = event.eventId)
-        try { onUserTranscript?.invoke(event.userTranscript) } catch (_: Throwable) {}
-        try { onTentativeUserTranscriptEvent?.invoke(event.userTranscript, event.eventId) } catch (_: Throwable) {}
+        try {
+            onUserTranscript?.invoke(event.userTranscript)
+        } catch (_: Throwable) {
+        }
+        try {
+            onTentativeUserTranscriptEvent?.invoke(event.userTranscript, event.eventId)
+        } catch (_: Throwable) {
+        }
     }
 
     /**
      * Handle tentative agent responses (partial)
      */
     private fun handleTentativeAgentResponse(event: ConversationEvent.TentativeAgentResponse) {
-        try { onAgentResponse?.invoke(event.tentativeAgentResponse) } catch (_: Throwable) {}
+        try {
+            onAgentResponse?.invoke(event.tentativeAgentResponse)
+        } catch (_: Throwable) {
+        }
     }
 
     /**
      * Handle audio alignment events
      */
     private fun handleAudioAlignment(event: ConversationEvent.AudioAlignment) {
-        try { onAudioAlignment?.invoke(event.alignment) } catch (_: Throwable) {}
+        try {
+            onAudioAlignment?.invoke(event.alignment)
+        } catch (_: Throwable) {
+        }
     }
 
     /**
      * Handle agent response metadata events
      */
     private fun handleAgentResponseMetadata(event: ConversationEvent.AgentResponseMetadata) {
-        try { onAgentResponseMetadata?.invoke(event.metadata) } catch (_: Throwable) {}
+        try {
+            onAgentResponseMetadata?.invoke(event.metadata)
+        } catch (_: Throwable) {
+        }
     }
 
     /**
@@ -159,7 +189,7 @@ class ConversationEventHandler(
             try {
                 audioManager.startPlayback()
             } catch (e: Exception) {
-            Log.d("ConvEventHandler", "Failed to start audio playback: ${e.message}")
+                Log.d("ConvEventHandler", "Failed to start audio playback: ${e.message}")
             }
         }
 
@@ -214,7 +244,6 @@ class ConversationEventHandler(
         }
 
         if (event.toolName == "end_call") {
-
             scope.launch {
                 try {
                     onEndCall?.invoke()
@@ -269,15 +298,19 @@ class ConversationEventHandler(
             val toolExists = toolRegistry.isToolRegistered(event.toolName)
             if (!toolExists) {
                 // Notify app layer about unhandled tool call
-                try { onUnhandledClientToolCall?.invoke(event) } catch (_: Throwable) {}
+                try {
+                    onUnhandledClientToolCall?.invoke(event)
+                } catch (_: Throwable) {
+                }
 
                 // If no callback is registered and agent expects a response, send failure to prevent hanging
                 if (onUnhandledClientToolCall == null && event.expectsResponse) {
-                    val failureEvent = OutgoingEvent.ClientToolResult(
-                        toolCallId = event.toolCallId,
-                        result = "Tool '${event.toolName}' not registered and no handler provided",
-                        isError = true
-                    )
+                    val failureEvent =
+                        OutgoingEvent.ClientToolResult(
+                            toolCallId = event.toolCallId,
+                            result = "Tool '${event.toolName}' not registered and no handler provided",
+                            isError = true,
+                        )
                     messageCallback(failureEvent)
                     Log.d("ConvEventHandler", "Tool '${event.toolName}' not registered - sent automatic failure response")
                 } else {
@@ -286,30 +319,42 @@ class ConversationEventHandler(
                 return@launch
             }
 
-            val result = try {
-                toolRegistry.executeTool(event.toolName, event.parameters)
-            } catch (e: Exception) {
-                ClientToolResult.failure("Tool execution failed: ${e.message}")
-            }
+            val result =
+                try {
+                    toolRegistry.executeTool(event.toolName, event.parameters)
+                } catch (e: Exception) {
+                    ClientToolResult.failure("Tool execution failed: ${e.message}")
+                }
 
             // Send result back to agent if response is expected and result is not null
             if (event.expectsResponse && result != null) {
                 // Send the result string directly - backend expects a string, not a wrapped object
-                val resultString = if (result.success) {
-                    result.result
-                } else {
-                    result.error ?: "Tool execution failed"
-                }
-                
-                val toolResultEvent = OutgoingEvent.ClientToolResult(
-                    toolCallId = event.toolCallId,
-                    result = resultString,
-                    isError = !result.success
-                )
+                val resultString =
+                    if (result.success) {
+                        result.result
+                    } else {
+                        result.error ?: "Tool execution failed"
+                    }
+
+                val toolResultEvent =
+                    OutgoingEvent.ClientToolResult(
+                        toolCallId = event.toolCallId,
+                        result = resultString,
+                        isError = !result.success,
+                    )
 
                 messageCallback(toolResultEvent)
             }
-            Log.d("ConvEventHandler", "Tool executed: ${event.toolName} -> ${if (result == null) "NO_RESPONSE" else if (result.success) "SUCCESS" else "FAILED"}")
+            Log.d(
+                "ConvEventHandler",
+                "Tool executed: ${event.toolName} -> ${if (result == null) {
+                    "NO_RESPONSE"
+                } else if (result.success) {
+                    "SUCCESS"
+                } else {
+                    "FAILED"
+                }}",
+            )
         }
     }
 
@@ -359,12 +404,17 @@ class ConversationEventHandler(
      * @param result The result string to send back to the agent
      * @param isError Whether the tool execution resulted in an error
      */
-    fun sendToolResult(toolCallId: String, result: String, isError: Boolean = false) {
-        val toolResultEvent = OutgoingEvent.ClientToolResult(
-            toolCallId = toolCallId,
-            result = result,
-            isError = isError
-        )
+    fun sendToolResult(
+        toolCallId: String,
+        result: String,
+        isError: Boolean = false,
+    ) {
+        val toolResultEvent =
+            OutgoingEvent.ClientToolResult(
+                toolCallId = toolCallId,
+                result = result,
+                isError = isError,
+            )
         messageCallback(toolResultEvent)
         Log.d("ConvEventHandler", "Sent tool result for call ID: $toolCallId (${if (isError) "ERROR" else "SUCCESS"})")
     }
@@ -381,15 +431,19 @@ class ConversationEventHandler(
         if (lastEventId != null) {
             // Check if we've already sent feedback for this event or a newer one
             if (lastFeedbackSentForEventId != null && lastEventId <= lastFeedbackSentForEventId) {
-                Log.d("ConvEventHandler", "Feedback already sent for event ID $lastEventId (last feedback sent for: $lastFeedbackSentForEventId)")
+                Log.d(
+                    "ConvEventHandler",
+                    "Feedback already sent for event ID $lastEventId (last feedback sent for: $lastFeedbackSentForEventId)",
+                )
                 return
             }
 
             try {
-                val event = OutgoingEvent.Feedback(
-                    score = if (isPositive) "like" else "dislike",
-                    eventId = lastEventId
-                )
+                val event =
+                    OutgoingEvent.Feedback(
+                        score = if (isPositive) "like" else "dislike",
+                        eventId = lastEventId,
+                    )
                 messageCallback(event)
                 Log.d("ConvEventHandler", "Sent ${if (isPositive) "positive" else "negative"} feedback for event ID: $lastEventId")
 
@@ -434,16 +488,23 @@ class ConversationEventHandler(
     fun getCurrentMode(): ConversationMode = _conversationMode.value
 
     /** Accumulates a streaming `agent_chat_response_part` into its turn's message. */
-    private fun appendAgentResponsePart(text: String, eventId: Int?, isStop: Boolean) {
+    private fun appendAgentResponsePart(
+        text: String,
+        eventId: Int?,
+        isStop: Boolean,
+    ) {
         _messages.update { current ->
             val idx = current.messageIndex(MessageRole.AGENT, eventId)
             when {
                 idx != null -> {
                     val existing = current[idx]
                     // Don't apply streaming updates to a finalized message.
-                    if (!existing.isPartial) current
-                    else current.toMutableList().also {
-                        it[idx] = existing.copy(content = existing.content + text, eventId = eventId, isPartial = !isStop)
+                    if (!existing.isPartial) {
+                        current
+                    } else {
+                        current.toMutableList().also {
+                            it[idx] = existing.copy(content = existing.content + text, eventId = eventId, isPartial = !isStop)
+                        }
                     }
                 }
                 // With no match, only start a bubble for a new turn; ignore streaming updates with stale event_ids.
@@ -455,7 +516,10 @@ class ConversationEventHandler(
     }
 
     /** Applies the canonical finalized `agent_response` / `agent_response_correction` for a turn. */
-    private fun applyAgentResponse(content: String, eventId: Int?) {
+    private fun applyAgentResponse(
+        content: String,
+        eventId: Int?,
+    ) {
         _messages.update { current ->
             val idx = current.messageIndex(MessageRole.AGENT, eventId)
             if (idx != null) {
@@ -469,23 +533,30 @@ class ConversationEventHandler(
     }
 
     /** Applies a finalized `user_transcript`. */
-    private fun applyUserTranscript(content: String, eventId: Int?) {
+    private fun applyUserTranscript(
+        content: String,
+        eventId: Int?,
+    ) {
         _messages.update { current ->
             val idx = current.messageIndex(MessageRole.USER, eventId)
-            val reconciled = if (idx != null) {
-                current.toMutableList().also {
-                    it[idx] = current[idx].copy(content = content, eventId = eventId, isPartial = false)
+            val reconciled =
+                if (idx != null) {
+                    current.toMutableList().also {
+                        it[idx] = current[idx].copy(content = content, eventId = eventId, isPartial = false)
+                    }
+                } else {
+                    current + Message(role = MessageRole.USER, content = content, eventId = eventId, isPartial = false)
                 }
-            } else {
-                current + Message(role = MessageRole.USER, content = content, eventId = eventId, isPartial = false)
-            }
             // Make sure there are no orphaned tentative user transcripts.
             reconciled.filterNot { it.role == MessageRole.USER && it.isPartial }
         }
     }
 
     /** Applies an in-progress `tentative_user_transcript`. */
-    private fun applyTentativeUserTranscript(content: String, eventId: Int?) {
+    private fun applyTentativeUserTranscript(
+        content: String,
+        eventId: Int?,
+    ) {
         _messages.update { current ->
             // Make sure there are no orphaned tentative user transcripts.
             val withoutPartials = current.filterNot { it.role == MessageRole.USER && it.isPartial }
@@ -499,7 +570,10 @@ class ConversationEventHandler(
     }
 
     /** Index of [role]'s message with exactly [eventId], or null (null ids never match). */
-    private fun List<Message>.messageIndex(role: MessageRole, eventId: Int?): Int? {
+    private fun List<Message>.messageIndex(
+        role: MessageRole,
+        eventId: Int?,
+    ): Int? {
         if (eventId == null) return null
         // Ids are unique per role but unsorted (finals can arrive late), so scan fully; tail-first
         // keeps the common "touch the latest message" case cheap.
@@ -507,7 +581,10 @@ class ConversationEventHandler(
     }
 
     /** Whether [eventId] is newer than the highest event id [role] has recorded. */
-    private fun List<Message>.isNewerThanHighestEventId(role: MessageRole, eventId: Int?): Boolean {
+    private fun List<Message>.isNewerThanHighestEventId(
+        role: MessageRole,
+        eventId: Int?,
+    ): Boolean {
         if (eventId == null) return true
         // Take the max, not the last: finals can append out of order, and null-id local (typed)
         // messages carry no order, so they're skipped.
@@ -516,7 +593,10 @@ class ConversationEventHandler(
     }
 
     /** Appends a finalized local message (no event id), e.g. text the user sends. */
-    private fun appendLocalMessage(role: MessageRole, content: String) {
+    private fun appendLocalMessage(
+        role: MessageRole,
+        content: String,
+    ) {
         _messages.update { it + Message(role = role, content = content, eventId = null, isPartial = false) }
     }
 

@@ -8,7 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `ConversationEventParser` now reads `conversation_initiation_metadata` payloads
+  from the `_event`-suffixed key the server actually sends
+  (`conversation_initiation_metadata_event`), with fallbacks to the unsuffixed
+  key and flat root for compatibility.
+
+### Changed
+- Burned down the detekt/ktlint baselines: ktlint auto-format applied across
+  the codebase, wildcard imports replaced with explicit imports, and
+  Composable-aware rule configuration added (baselines shrank from ~850 to
+  under 40 entries).
+
 ### Added
+- Compose UI tests for the example app (`StartScreen`, `TextChatScreen`),
+  run in the CI emulator job alongside the SDK instrumented tests.
+- API reference published to GitHub Pages on every push to `main` (Dokka).
+- Pull request template and `CONTRIBUTING.md`.
 - Static analysis (detekt + ktlint) wired into CI with baselines.
 - Expanded JVM unit test coverage for event parsing, transcript state,
   callbacks/deprecations, token fetching, and configuration.

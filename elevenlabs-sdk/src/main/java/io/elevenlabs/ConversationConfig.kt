@@ -1,7 +1,7 @@
 package io.elevenlabs
 
-import io.elevenlabs.models.AudioFrame
 import io.elevenlabs.models.AgentResponsePartType
+import io.elevenlabs.models.AudioFrame
 import io.elevenlabs.models.ConversationEvent.ClientToolCall
 import io.elevenlabs.models.ConversationMode
 import io.elevenlabs.models.ConversationStatus
@@ -12,7 +12,9 @@ import io.elevenlabs.models.DisconnectionDetails
  *
  * @param audioLevel Audio level in dB that triggered the event
  */
-data class MutedSpeechEvent(val audioLevel: Float)
+data class MutedSpeechEvent(
+    val audioLevel: Float,
+)
 
 /**
  * Microphone pipeline configuration.
@@ -127,30 +129,30 @@ data class Overrides(
     val agent: AgentOverrides? = null,
     val tts: TtsOverrides? = null,
     val conversation: ConversationOverrides? = null,
-    val client: ClientOverrides? = null
+    val client: ClientOverrides? = null,
 )
 
 data class AgentOverrides(
     val prompt: PromptOverrides? = null,
     val firstMessage: String? = null,
-    val language: Language? = null
+    val language: Language? = null,
 )
 
 data class PromptOverrides(
-    val prompt: String? = null
+    val prompt: String? = null,
 )
 
 data class TtsOverrides(
-    val voiceId: String? = null
+    val voiceId: String? = null,
 )
 
 data class ConversationOverrides(
-    val textOnly: Boolean? = null
+    val textOnly: Boolean? = null,
 )
 
 data class ClientOverrides(
     val source: String? = null,
-    val version: String? = null
+    val version: String? = null,
 )
 
 /**
@@ -158,7 +160,9 @@ data class ClientOverrides(
  *
  * Source: https://help.elevenlabs.io/hc/en-us/articles/13313366263441-What-languages-do-you-support
  */
-enum class Language(val code: String) {
+enum class Language(
+    val code: String,
+) {
     AF("af"),
     AR("ar"),
     AS("as"),
@@ -233,7 +237,8 @@ enum class Language(val code: String) {
     UK("uk"),
     UR("ur"),
     VI("vi"),
-    ZH("zh");
+    ZH("zh"),
+    ;
 
     companion object {
         fun fromCode(code: String): Language? = entries.find { it.code == code }

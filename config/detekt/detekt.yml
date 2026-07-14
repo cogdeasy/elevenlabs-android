@@ -20,6 +20,11 @@ style:
     active: false
   UnusedPrivateMember:
     active: true
+    ignoreAnnotated: ['Preview']
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
 
 exceptions:
   TooGenericExceptionCaught:

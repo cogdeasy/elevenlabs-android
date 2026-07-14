@@ -1,10 +1,14 @@
 package io.elevenlabs
 
 import android.util.Log
-import kotlinx.coroutines.*
-import java.util.Locale
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 /**
  * Registry for managing client-side tools that can be executed by ElevenLabs agents
@@ -13,7 +17,6 @@ import java.util.concurrent.TimeUnit
  * client tools with proper error handling, timeout management, and async execution.
  */
 class ClientToolRegistry {
-
     private val tools = ConcurrentHashMap<String, ClientTool>()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -28,7 +31,10 @@ class ClientToolRegistry {
      * @param tool Implementation of the tool functionality
      * @throws IllegalArgumentException if a tool with the same name already exists
      */
-    fun registerTool(name: String, tool: ClientTool) {
+    fun registerTool(
+        name: String,
+        tool: ClientTool,
+    ) {
         require(name.isNotBlank()) { "Tool name cannot be blank" }
 
         if (tools.containsKey(name)) {
@@ -48,7 +54,7 @@ class ClientToolRegistry {
     fun unregisterTool(name: String): Boolean {
         val removed = tools.remove(name) != null
         if (removed) {
-        Log.d("ClientToolRegistry", "Unregistered client tool: $name")
+            Log.d("ClientToolRegistry", "Unregistered client tool: $name")
         }
         return removed
     }
@@ -64,10 +70,11 @@ class ClientToolRegistry {
     suspend fun executeTool(
         name: String,
         parameters: Map<String, Any>,
-        timeoutMs: Long = DEFAULT_TIMEOUT_MS
+        timeoutMs: Long = DEFAULT_TIMEOUT_MS,
     ): ClientToolResult? {
-        val tool = tools[name]
-            ?: return ClientToolResult.failure("Tool '$name' not found")
+        val tool =
+            tools[name]
+                ?: return ClientToolResult.failure("Tool '$name' not found")
 
         return try {
             withTimeout(timeoutMs) {
@@ -91,7 +98,7 @@ class ClientToolRegistry {
     fun executeToolAsync(
         name: String,
         parameters: Map<String, Any>,
-        callback: ((ClientToolResult?) -> Unit)? = null
+        callback: ((ClientToolResult?) -> Unit)? = null,
     ) {
         scope.launch {
             val result = executeTool(name, parameters)
@@ -189,7 +196,10 @@ class ClientToolRegistryBuilder {
      * @param tool Tool implementation
      * @return This builder for chaining
      */
-    fun addTool(name: String, tool: ClientTool): ClientToolRegistryBuilder {
+    fun addTool(
+        name: String,
+        tool: ClientTool,
+    ): ClientToolRegistryBuilder {
         registry.registerTool(name, tool)
         return this
     }
@@ -201,17 +211,22 @@ class ClientToolRegistryBuilder {
      * @param function Function to execute
      * @return This builder for chaining
      */
-    fun addTool(name: String, function: suspend (Map<String, Any>) -> String): ClientToolRegistryBuilder {
-        registry.registerTool(name, object : ClientTool {
-            override suspend fun execute(parameters: Map<String, Any>): ClientToolResult? {
-                return try {
-                    val result = function(parameters)
-                    ClientToolResult.success(result)
-                } catch (e: Exception) {
-                    ClientToolResult.failure("Function execution failed: ${e.message}")
-                }
-            }
-        })
+    fun addTool(
+        name: String,
+        function: suspend (Map<String, Any>) -> String,
+    ): ClientToolRegistryBuilder {
+        registry.registerTool(
+            name,
+            object : ClientTool {
+                override suspend fun execute(parameters: Map<String, Any>): ClientToolResult? =
+                    try {
+                        val result = function(parameters)
+                        ClientToolResult.success(result)
+                    } catch (e: Exception) {
+                        ClientToolResult.failure("Function execution failed: ${e.message}")
+                    }
+            },
+        )
         return this
     }
 

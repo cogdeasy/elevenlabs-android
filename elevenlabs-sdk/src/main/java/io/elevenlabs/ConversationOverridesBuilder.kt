@@ -6,7 +6,6 @@ import org.json.JSONObject
  * Helper to construct the initiation client data payload from ConversationConfig.
  */
 object ConversationOverridesBuilder {
-
     private const val TYPE = "conversation_initiation_client_data"
 
     fun constructOverrides(config: ConversationConfig): JSONObject {
@@ -67,4 +66,3 @@ object ConversationOverridesBuilder {
         return root
     }
 }
-

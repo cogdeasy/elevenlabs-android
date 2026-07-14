@@ -37,18 +37,20 @@ fun StartScreen(
 ) {
     val isConnecting = status == ConversationStatus.CONNECTING
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Image(
             painter = painterResource(id = R.drawable.elevenlabs_logo),
             contentDescription = "ElevenLabs Logo",
-            modifier = Modifier
-                .height(48.dp)
-                .fillMaxWidth(0.7f),
+            modifier =
+                Modifier
+                    .height(48.dp)
+                    .fillMaxWidth(0.7f),
         )
         Spacer(Modifier.height(8.dp))
         Text(
@@ -58,7 +60,6 @@ fun StartScreen(
         )
 
         Spacer(Modifier.height(40.dp))
-
 
         Button(
             onClick = onConnect,
@@ -70,9 +71,10 @@ fun StartScreen(
 
         Spacer(Modifier.height(16.dp))
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -82,7 +84,6 @@ fun StartScreen(
             )
             Switch(checked = textOnlyMode, onCheckedChange = onToggleTextOnly)
         }
-
     }
 }
 

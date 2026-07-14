@@ -13,9 +13,7 @@ import org.junit.Test
  * type discriminator must match the ConvAI protocol.
  */
 class OutgoingEventSerializationTest {
-
-    private fun serialize(event: OutgoingEvent): JSONObject =
-        JSONObject(ConversationEventParser.serializeOutgoingEvent(event))
+    private fun serialize(event: OutgoingEvent): JSONObject = JSONObject(ConversationEventParser.serializeOutgoingEvent(event))
 
     @Test
     fun `user message serializes text and type`() {
@@ -52,13 +50,14 @@ class OutgoingEventSerializationTest {
 
     @Test
     fun `client tool result serializes snake_case fields and string result`() {
-        val json = serialize(
-            OutgoingEvent.ClientToolResult(
-                toolCallId = "call_9",
-                result = """{"ok":true}""",
-                isError = false
+        val json =
+            serialize(
+                OutgoingEvent.ClientToolResult(
+                    toolCallId = "call_9",
+                    result = """{"ok":true}""",
+                    isError = false,
+                ),
             )
-        )
 
         assertEquals("client_tool_result", json.getString("type"))
         assertEquals("call_9", json.getString("tool_call_id"))
@@ -68,9 +67,10 @@ class OutgoingEventSerializationTest {
 
     @Test
     fun `client tool result serializes error flag`() {
-        val json = serialize(
-            OutgoingEvent.ClientToolResult(toolCallId = "call_9", result = "failed", isError = true)
-        )
+        val json =
+            serialize(
+                OutgoingEvent.ClientToolResult(toolCallId = "call_9", result = "failed", isError = true),
+            )
 
         assertTrue(json.getBoolean("is_error"))
     }

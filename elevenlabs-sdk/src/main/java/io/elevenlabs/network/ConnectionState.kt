@@ -37,7 +37,9 @@ enum class ConnectionState : Status {
     /**
      * Connection encountered an error
      */
-    ERROR;
+    ERROR,
+
+    ;
 
     /**
      * Returns true if the connection is in an active state

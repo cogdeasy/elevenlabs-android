@@ -24,4 +24,3 @@ import kotlinx.coroutines.flow.StateFlow
  * @return LiveData that mirrors the StateFlow's values
  */
 fun <T> StateFlow<T>.asLiveData(): LiveData<T> = (this as kotlinx.coroutines.flow.Flow<T>).asLiveData()
-

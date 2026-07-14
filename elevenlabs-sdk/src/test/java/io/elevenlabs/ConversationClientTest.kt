@@ -1,15 +1,21 @@
 package io.elevenlabs
 
 import android.content.Context
-import io.mockk.*
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
 
 class ConversationClientTest {
-
     private lateinit var mockContext: Context
     private lateinit var mockSession: ConversationSession
 
@@ -27,22 +33,24 @@ class ConversationClientTest {
     }
 
     @Test
-    fun `startSession calls ConversationClientImpl startSession`() = runTest {
-        val config = ConversationConfig(
-            conversationToken = "test-token"
-        )
+    fun `startSession calls ConversationClientImpl startSession`() =
+        runTest {
+            val config =
+                ConversationConfig(
+                    conversationToken = "test-token",
+                )
 
-        // Mock the ConversationClientImpl singleton object
-        mockkObject(ConversationClientImpl)
-        coEvery {
-            ConversationClientImpl.startSession(config, mockContext)
-        } returns mockSession
+            // Mock the ConversationClientImpl singleton object
+            mockkObject(ConversationClientImpl)
+            coEvery {
+                ConversationClientImpl.startSession(config, mockContext)
+            } returns mockSession
 
-        val result = ConversationClient.startSession(config, mockContext)
+            val result = ConversationClient.startSession(config, mockContext)
 
-        assertEquals(mockSession, result)
-        coVerify { ConversationClientImpl.startSession(config, mockContext) }
-    }
+            assertEquals(mockSession, result)
+            coVerify { ConversationClientImpl.startSession(config, mockContext) }
+        }
 
     @Test
     fun `builder calls ConversationClientImpl builder`() {

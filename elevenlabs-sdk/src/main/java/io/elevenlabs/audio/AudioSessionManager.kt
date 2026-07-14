@@ -4,10 +4,10 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioDeviceInfo
 import android.media.AudioFocusRequest
-import android.media.AudioManager as SystemAudioManager
 import android.os.Build
-import androidx.annotation.RequiresApi
 import android.util.Log
+import androidx.annotation.RequiresApi
+import android.media.AudioManager as SystemAudioManager
 
 /**
  * Audio session management for optimal conversation quality
@@ -15,15 +15,17 @@ import android.util.Log
  * This class handles audio session configuration, focus management,
  * and quality optimization for voice conversations.
  */
-class AudioSessionManager(private val context: Context) {
-
+class AudioSessionManager(
+    private val context: Context,
+) {
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as SystemAudioManager
     private var audioFocusRequest: AudioFocusRequest? = null
     private var hasAudioFocus = false
 
-    private val audioFocusChangeListener = SystemAudioManager.OnAudioFocusChangeListener { focusChange ->
-        handleAudioFocusChange(focusChange)
-    }
+    private val audioFocusChangeListener =
+        SystemAudioManager.OnAudioFocusChangeListener { focusChange ->
+            handleAudioFocusChange(focusChange)
+        }
 
     /**
      * Configure audio session for voice communication
@@ -41,7 +43,6 @@ class AudioSessionManager(private val context: Context) {
             val vol = audioManager.getStreamVolume(SystemAudioManager.STREAM_VOICE_CALL)
             val max = audioManager.getStreamMaxVolume(SystemAudioManager.STREAM_VOICE_CALL)
             Log.d("AudioSessionManager", "MODE_IN_COMMUNICATION, speakerphoneOn=${isSpeakerphoneEnabledCompat()}, voiceVol=$vol/$max")
-
         } catch (e: Exception) {
             Log.d("AudioSessionManager", "Failed to configure audio session: ${e.message}")
         }
@@ -57,7 +58,6 @@ class AudioSessionManager(private val context: Context) {
 
             // Request audio focus
             requestAudioFocus()
-
         } catch (e: Exception) {
             Log.d("AudioSessionManager", "Failed to configure audio session for media: ${e.message}")
         }
@@ -79,16 +79,20 @@ class AudioSessionManager(private val context: Context) {
      */
     @RequiresApi(Build.VERSION_CODES.O)
     private fun requestAudioFocusV26() {
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-            .build()
+        val audioAttributes =
+            AudioAttributes
+                .Builder()
+                .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
 
-        audioFocusRequest = AudioFocusRequest.Builder(SystemAudioManager.AUDIOFOCUS_GAIN)
-            .setAudioAttributes(audioAttributes)
-            .setAcceptsDelayedFocusGain(true)
-            .setOnAudioFocusChangeListener(audioFocusChangeListener)
-            .build()
+        audioFocusRequest =
+            AudioFocusRequest
+                .Builder(SystemAudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .build()
 
         val result = audioManager.requestAudioFocus(audioFocusRequest!!)
         hasAudioFocus = result == SystemAudioManager.AUDIOFOCUS_REQUEST_GRANTED
@@ -99,11 +103,12 @@ class AudioSessionManager(private val context: Context) {
      */
     @Suppress("DEPRECATION")
     private fun requestAudioFocusLegacy() {
-        val result = audioManager.requestAudioFocus(
-            audioFocusChangeListener,
-            SystemAudioManager.STREAM_VOICE_CALL,
-            SystemAudioManager.AUDIOFOCUS_GAIN
-        )
+        val result =
+            audioManager.requestAudioFocus(
+                audioFocusChangeListener,
+                SystemAudioManager.STREAM_VOICE_CALL,
+                SystemAudioManager.AUDIOFOCUS_GAIN,
+            )
         hasAudioFocus = result == SystemAudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
@@ -194,8 +199,8 @@ class AudioSessionManager(private val context: Context) {
     /**
      * Check if speakerphone is enabled using modern API when available
      */
-    private fun isSpeakerphoneEnabledCompat(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    private fun isSpeakerphoneEnabledCompat(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Use modern communication device API (Android 12+)
             getSpeakerphoneStateModern()
         } else {
@@ -203,7 +208,6 @@ class AudioSessionManager(private val context: Context) {
             @Suppress("DEPRECATION")
             audioManager.isSpeakerphoneOn
         }
-    }
 
     /**
      * Set speakerphone using modern communication device API (Android 12+)
@@ -212,9 +216,10 @@ class AudioSessionManager(private val context: Context) {
     private fun setSpeakerphoneModern(enabled: Boolean) {
         if (enabled) {
             // Enable speakerphone by setting communication device to built-in speaker
-            val speakerDevice = audioManager.availableCommunicationDevices.find {
-                it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
-            }
+            val speakerDevice =
+                audioManager.availableCommunicationDevices.find {
+                    it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                }
             speakerDevice?.let { device ->
                 audioManager.setCommunicationDevice(device)
             } ?: run {
@@ -245,7 +250,6 @@ class AudioSessionManager(private val context: Context) {
             abandonAudioFocus()
             audioManager.mode = SystemAudioManager.MODE_NORMAL
             setSpeakerphoneEnabledCompat(false)
-
         } catch (e: Exception) {
             Log.d("AudioSessionManager", "Failed to reset audio session: ${e.message}")
         }

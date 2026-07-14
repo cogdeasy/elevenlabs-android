@@ -2,7 +2,6 @@ package io.elevenlabs.network
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -18,9 +17,8 @@ import java.io.IOException
 class TokenService(
     private val baseUrl: String = "https://api.elevenlabs.io",
     private val httpClient: OkHttpClient = OkHttpClient(),
-    private val gson: Gson = Gson()
+    private val gson: Gson = Gson(),
 ) {
-
     /**
      * Fetch a conversation token for a public agent (no API key required)
      *
@@ -31,40 +29,49 @@ class TokenService(
      * @return TokenResponse containing the token and connection details
      * @throws TokenServiceException if the request fails or returns an error
      */
-    suspend fun fetchPublicAgentToken(agentId: String, source: String, version: String, environment: String? = null): TokenResponse = withContext(Dispatchers.IO) {
-        val url = buildTokenUrl(agentId, source, version, environment)
+    suspend fun fetchPublicAgentToken(
+        agentId: String,
+        source: String,
+        version: String,
+        environment: String? = null,
+    ): TokenResponse =
+        withContext(Dispatchers.IO) {
+            val url = buildTokenUrl(agentId, source, version, environment)
 
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("Accept", "application/json")
-            .get()
-            .build()
-
-        try {
-            val response = httpClient.newCall(request).execute()
-
-            if (!response.isSuccessful) {
-                val errorBody = response.body?.string() ?: "Unknown error"
-                throw TokenServiceException(
-                    "Failed to fetch public agent token: HTTP ${response.code} - $errorBody"
-                )
-            }
-
-            val responseBody = response.body?.string()
-                ?: throw TokenServiceException("Empty response body")
+            val request =
+                Request
+                    .Builder()
+                    .url(url)
+                    .addHeader("Accept", "application/json")
+                    .get()
+                    .build()
 
             try {
-                val parsed = gson.fromJson(responseBody, TokenResponse::class.java)
-                    ?: throw TokenServiceException("Failed to parse token response")
-                parsed
-            } catch (e: Exception) {
-                throw TokenServiceException("Failed to parse token response: ${e.message}", e)
-            }
+                val response = httpClient.newCall(request).execute()
 
-        } catch (e: IOException) {
-            throw TokenServiceException("Network error: ${e.message}", e)
+                if (!response.isSuccessful) {
+                    val errorBody = response.body?.string() ?: "Unknown error"
+                    throw TokenServiceException(
+                        "Failed to fetch public agent token: HTTP ${response.code} - $errorBody",
+                    )
+                }
+
+                val responseBody =
+                    response.body?.string()
+                        ?: throw TokenServiceException("Empty response body")
+
+                try {
+                    val parsed =
+                        gson.fromJson(responseBody, TokenResponse::class.java)
+                            ?: throw TokenServiceException("Failed to parse token response")
+                    parsed
+                } catch (e: Exception) {
+                    throw TokenServiceException("Failed to parse token response: ${e.message}", e)
+                }
+            } catch (e: IOException) {
+                throw TokenServiceException("Network error: ${e.message}", e)
+            }
         }
-    }
 
     /**
      * Build the URL for fetching conversation tokens
@@ -73,7 +80,12 @@ class TokenService(
      * @param environment Optional environment name
      * @return Complete URL for the token request
      */
-    private fun buildTokenUrl(agentId: String, source: String, version: String, environment: String? = null): String {
+    private fun buildTokenUrl(
+        agentId: String,
+        source: String,
+        version: String,
+        environment: String? = null,
+    ): String {
         var url = "$baseUrl/v1/convai/conversation/token?agent_id=$agentId&source=$source&version=$version"
         environment?.let { url += "&environment=$it" }
         return url
@@ -95,5 +107,5 @@ data class TokenResponse(
  */
 class TokenServiceException(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
 ) : Exception(message, cause)

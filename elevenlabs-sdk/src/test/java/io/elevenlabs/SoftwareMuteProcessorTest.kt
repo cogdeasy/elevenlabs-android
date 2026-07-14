@@ -8,11 +8,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlin.math.sin
 import kotlin.math.PI
+import kotlin.math.sin
 
 class SoftwareMuteProcessorTest {
-
     private val numBands = 3
     private val numFrames = 480
 
@@ -37,10 +36,15 @@ class SoftwareMuteProcessorTest {
 
     private fun silence(count: Int): FloatArray = FloatArray(count) { 0f }
 
-    private fun loudTone(count: Int, amplitudeInt16: Float = 16_000f): FloatArray =
-        FloatArray(count) { i -> (amplitudeInt16 * sin(2.0 * PI * 440.0 * i / 48000.0)).toFloat() }
+    private fun loudTone(
+        count: Int,
+        amplitudeInt16: Float = 16_000f,
+    ): FloatArray = FloatArray(count) { i -> (amplitudeInt16 * sin(2.0 * PI * 440.0 * i / 48000.0)).toFloat() }
 
-    private fun interleavedFromMono(mono: FloatArray, numBands: Int): FloatArray {
+    private fun interleavedFromMono(
+        mono: FloatArray,
+        numBands: Int,
+    ): FloatArray {
         val numFrames = mono.size
         return FloatArray(numBands * numFrames) { i ->
             mono[i / numBands]
@@ -50,10 +54,11 @@ class SoftwareMuteProcessorTest {
     @Test
     fun `interleaved multi-channel buffer uses per-channel RMS average`() {
         var fired: Float? = null
-        val processor = createProcessor(
-            onMutedSpeech = { fired = it.audioLevel },
-            mutedSpeechThrottleMs = 0L,
-        )
+        val processor =
+            createProcessor(
+                onMutedSpeech = { fired = it.audioLevel },
+                mutedSpeechThrottleMs = 0L,
+            )
         processor.setMuted(true)
         val interleaved = interleavedFromMono(loudTone(numFrames), numBands)
         repeat(6) {
@@ -79,10 +84,11 @@ class SoftwareMuteProcessorTest {
     @Test
     fun `does not fire on silence while muted`() {
         var fired: Float? = null
-        val processor = createProcessor(
-            onMutedSpeech = { fired = it.audioLevel },
-            mutedSpeechThrottleMs = 0L
-        )
+        val processor =
+            createProcessor(
+                onMutedSpeech = { fired = it.audioLevel },
+                mutedSpeechThrottleMs = 0L,
+            )
 
         processor.setMuted(true)
         repeat(10) {
@@ -95,10 +101,11 @@ class SoftwareMuteProcessorTest {
     @Test
     fun `fires on sustained loud audio while muted`() {
         var fired: Float? = null
-        val processor = createProcessor(
-            onMutedSpeech = { fired = it.audioLevel },
-            mutedSpeechThrottleMs = 0L
-        )
+        val processor =
+            createProcessor(
+                onMutedSpeech = { fired = it.audioLevel },
+                mutedSpeechThrottleMs = 0L,
+            )
 
         processor.setMuted(true)
         repeat(6) {
@@ -112,10 +119,11 @@ class SoftwareMuteProcessorTest {
     @Test
     fun `does not fire on single loud buffer with default hangover`() {
         var fired: Float? = null
-        val processor = createProcessor(
-            onMutedSpeech = { fired = it.audioLevel },
-            mutedSpeechThrottleMs = 0L
-        )
+        val processor =
+            createProcessor(
+                onMutedSpeech = { fired = it.audioLevel },
+                mutedSpeechThrottleMs = 0L,
+            )
 
         processor.setMuted(true)
         processor.processAudio(numBands, numFrames, makeBuffer(loudTone(numFrames)))
@@ -159,10 +167,11 @@ class SoftwareMuteProcessorTest {
     @Test
     fun `throttle suppresses rapid repeated events`() {
         var fireCount = 0
-        val processor = createProcessor(
-            onMutedSpeech = { fireCount += 1 },
-            mutedSpeechThrottleMs = 10_000L,
-        )
+        val processor =
+            createProcessor(
+                onMutedSpeech = { fireCount += 1 },
+                mutedSpeechThrottleMs = 10_000L,
+            )
 
         processor.setMuted(true)
         repeat(30) {

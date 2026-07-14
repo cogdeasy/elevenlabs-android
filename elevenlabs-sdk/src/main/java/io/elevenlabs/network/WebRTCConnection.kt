@@ -3,29 +3,35 @@ package io.elevenlabs.network
 import android.content.Context
 import android.util.Log
 import io.elevenlabs.ConversationConfig
+import io.elevenlabs.ConversationOverridesBuilder
 import io.elevenlabs.models.AudioFrame
 import io.elevenlabs.models.ConversationMode
-import io.elevenlabs.models.ConversationStatus
 import io.elevenlabs.models.DisconnectionDetails
 import io.elevenlabs.models.toConversationStatus
+import io.livekit.android.events.RoomEvent
+import io.livekit.android.events.collect
 import io.livekit.android.room.Room
 import io.livekit.android.room.participant.LocalParticipant
 import io.livekit.android.room.participant.Participant
 import io.livekit.android.room.participant.RemoteParticipant
-import io.livekit.android.room.track.LocalAudioTrack
 import io.livekit.android.room.track.RemoteAudioTrack
 import io.livekit.android.room.track.Track
-import io.livekit.android.events.RoomEvent
-import io.livekit.android.events.collect
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import livekit.org.webrtc.AudioTrackSink
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Collections
-import io.elevenlabs.ConversationOverridesBuilder
-
 
 /**
  * WebRTC implementation using LiveKit for real-time communication
@@ -37,9 +43,8 @@ import io.elevenlabs.ConversationOverridesBuilder
 class WebRTCConnection(
     private val context: Context,
     private val room: Room,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob()),
 ) : BaseConnection() {
-
     private var localParticipant: LocalParticipant? = null
     private var latestConfig: ConversationConfig? = null
 
@@ -67,14 +72,18 @@ class WebRTCConnection(
     /**
      * Connect to LiveKit room using the WebRTC token from [config] and the given server URL.
      */
-    override suspend fun connect(serverUrl: String, config: ConversationConfig) {
+    override suspend fun connect(
+        serverUrl: String,
+        config: ConversationConfig,
+    ) {
         if (connectionState != ConnectionState.IDLE && connectionState != ConnectionState.DISCONNECTED) {
             throw IllegalStateException("Already connected or connecting")
         }
 
-        val token = requireNotNull(config.conversationToken?.takeIf { it.isNotBlank() }) {
-            "WebRTC connection requires a non-blank conversationToken"
-        }
+        val token =
+            requireNotNull(config.conversationToken?.takeIf { it.isNotBlank() }) {
+                "WebRTC connection requires a non-blank conversationToken"
+            }
 
         try {
             updateConnectionState(ConnectionState.CONNECTING)
@@ -90,12 +99,11 @@ class WebRTCConnection(
             Log.d("WebRTCConnection", "Connecting to LiveKit url: $serverUrl")
             room.connect(
                 url = serverUrl,
-                token = token
+                token = token,
             )
 
             // Start message processing
             startMessageProcessing()
-
         } catch (e: Exception) {
             invokeOnDisconnect(DisconnectionDetails.Error(e))
             updateConnectionState(ConnectionState.ERROR)
@@ -139,7 +147,6 @@ class WebRTCConnection(
             // Reset to IDLE state to allow reconnection
             updateConnectionState(ConnectionState.IDLE)
             Log.d("WebRTCConnection", "Disconnected and reset to IDLE state")
-
         } catch (e: Exception) {
             Log.d("WebRTCConnection", "Error during disconnect: ${e.message}")
             disconnectDetails = DisconnectionDetails.Error(e)
@@ -158,10 +165,11 @@ class WebRTCConnection(
             throw IllegalStateException("Not connected")
         }
 
-        val messageString = when (message) {
-            is String -> message
-            else -> ConversationEventParser.serializeOutgoingEvent(message as OutgoingEvent)
-        }
+        val messageString =
+            when (message) {
+                is String -> message
+                else -> ConversationEventParser.serializeOutgoingEvent(message as OutgoingEvent)
+            }
 
         val payload = messageString.toByteArray()
         scope.launch {
@@ -199,93 +207,96 @@ class WebRTCConnection(
         // Cancel any existing event handler
         eventHandlerJob?.cancel()
 
-        eventHandlerJob = scope.launch {
-            room.events.collect { event ->
-                when (event) {
-                    is RoomEvent.Connected -> {
-                        Log.d("WebRTCConnection", "Connected. roomSid=${room.sid}, name=${room.name}")
-                        // Mark connection as connected now that LK confirms
-                        updateConnectionState(ConnectionState.CONNECTED)
+        eventHandlerJob =
+            scope.launch {
+                room.events.collect { event ->
+                    when (event) {
+                        is RoomEvent.Connected -> {
+                            Log.d("WebRTCConnection", "Connected. roomSid=${room.sid}, name=${room.name}")
+                            // Mark connection as connected now that LK confirms
+                            updateConnectionState(ConnectionState.CONNECTED)
 
-                        // Start monitoring audio levels from remote participants
-                        startAudioLevelMonitoring()
+                            // Start monitoring audio levels from remote participants
+                            startAudioLevelMonitoring()
 
-                        // Send initiation overrides payload after actual connection
-                        try {
-                            latestConfig?.let { cfg ->
-                                val payload = ConversationOverridesBuilder
-                                    .constructOverrides(cfg)
-                                    .toString()
-                                sendMessage(payload)
+                            // Send initiation overrides payload after actual connection
+                            try {
+                                latestConfig?.let { cfg ->
+                                    val payload =
+                                        ConversationOverridesBuilder
+                                            .constructOverrides(cfg)
+                                            .toString()
+                                    sendMessage(payload)
+                                }
+                            } catch (e: Exception) {
+                                Log.d("WebRTCConnection", "failed to send overrides - ${e.message}")
                             }
-                        } catch (e: Exception) {
-                            Log.d("WebRTCConnection", "failed to send overrides - ${e.message}")
+
+                            // invoke user callback if provided with extracted conversation id
+                            try {
+                                val roomName = room.name ?: ""
+                                val match = Regex("conv_[A-Za-z0-9_-]+", RegexOption.IGNORE_CASE).find(roomName)
+                                val conversationId = match?.value ?: roomName
+                                latestConfig?.onConnect?.invoke(conversationId)
+                            } catch (t: Throwable) {
+                                Log.d("WebRTCConnection", "onConnect callback threw: ${t.message}")
+                            }
                         }
 
-                        // invoke user callback if provided with extracted conversation id
-                        try {
-                            val roomName = room.name ?: ""
-                            val match = Regex("conv_[A-Za-z0-9_-]+", RegexOption.IGNORE_CASE).find(roomName)
-                            val conversationId = match?.value ?: roomName
-                            latestConfig?.onConnect?.invoke(conversationId)
-                        } catch (t: Throwable) {
-                            Log.d("WebRTCConnection", "onConnect callback threw: ${t.message}")
+                        is RoomEvent.Disconnected -> {
+                            Log.d("WebRTCConnection", "LiveKit room disconnected: ${event.reason}")
+                            if (connectionState == ConnectionState.CONNECTED) {
+                                updateConnectionState(ConnectionState.DISCONNECTED)
+                            }
                         }
-                    }
 
-                    is RoomEvent.Disconnected -> {
-                        Log.d("WebRTCConnection", "LiveKit room disconnected: ${event.reason}")
-                        if (connectionState == ConnectionState.CONNECTED) {
-                            updateConnectionState(ConnectionState.DISCONNECTED)
+                        is RoomEvent.Reconnecting -> {
+                            Log.d("WebRTCConnection", "LiveKit room reconnecting")
+                            updateConnectionState(ConnectionState.RECONNECTING)
                         }
-                    }
 
-                    is RoomEvent.Reconnecting -> {
-                        Log.d("WebRTCConnection", "LiveKit room reconnecting")
-                        updateConnectionState(ConnectionState.RECONNECTING)
-                    }
+                        is RoomEvent.Reconnected -> {
+                            Log.d("WebRTCConnection", "LiveKit room reconnected")
+                            updateConnectionState(ConnectionState.CONNECTED)
+                        }
 
-                    is RoomEvent.Reconnected -> {
-                        Log.d("WebRTCConnection", "LiveKit room reconnected")
-                        updateConnectionState(ConnectionState.CONNECTED)
-                    }
+                        is RoomEvent.ParticipantDisconnected -> {
+                            Log.d("WebRTCConnection", "Participant disconnected: ${event.participant.sid}")
+                            handleParticipantDisconnected(event.participant)
+                        }
 
-                    is RoomEvent.ParticipantDisconnected -> {
-                        Log.d("WebRTCConnection", "Participant disconnected: ${event.participant.sid}")
-                        handleParticipantDisconnected(event.participant)
-                    }
+                        is RoomEvent.TrackSubscribed -> {
+                            Log.d("WebRTCConnection", "Audio track subscribed from ${event.participant.sid}")
+                            handleTrackSubscribed(event.track, event.participant)
+                        }
 
-                    is RoomEvent.TrackSubscribed -> {
-                        Log.d("WebRTCConnection", "Audio track subscribed from ${event.participant.sid}")
-                        handleTrackSubscribed(event.track, event.participant)
-                    }
+                        is RoomEvent.TrackUnsubscribed -> {
+                            Log.d("WebRTCConnection", "Track unsubscribed from ${event.participant.sid}")
+                            handleTrackUnsubscribed(event.track)
+                        }
 
-                    is RoomEvent.TrackUnsubscribed -> {
-                        Log.d("WebRTCConnection", "Track unsubscribed from ${event.participant.sid}")
-                        handleTrackUnsubscribed(event.track)
-                    }
+                        is RoomEvent.DataReceived -> {
+                            handleDataReceived(event.data, event.participant)
+                        }
 
-                    is RoomEvent.DataReceived -> {
-                        handleDataReceived(event.data, event.participant)
-                    }
-
-                    else -> {
-                        Log.d("WebRTCConnection", "Unhandled event: ${event.javaClass.simpleName}")
+                        else -> {
+                            Log.d("WebRTCConnection", "Unhandled event: ${event.javaClass.simpleName}")
+                        }
                     }
                 }
             }
-        }
     }
 
     /**
      * Start processing incoming messages
      */
     private fun startMessageProcessing() {
-        messageJob = scope.launch {
-            messageChannel.consumeAsFlow().collect { message ->
-                messageListener?.invoke(message)
+        messageJob =
+            scope.launch {
+                messageChannel.consumeAsFlow().collect { message ->
+                    messageListener?.invoke(message)
+                }
             }
-        }
     }
 
     /**
@@ -303,7 +314,10 @@ class WebRTCConnection(
     /**
      * Handle track subscribed event
      */
-    private fun handleTrackSubscribed(track: Track, participant: Participant) {
+    private fun handleTrackSubscribed(
+        track: Track,
+        participant: Participant,
+    ) {
         when (track) {
             is RemoteAudioTrack -> {
                 Log.d("WebRTCConnection", "Audio track subscribed from ${participant.sid}")
@@ -345,9 +359,10 @@ class WebRTCConnection(
     }
 
     private fun detachAllAgentAudioSinks() {
-        val snapshot = synchronized(agentAudioSinks) {
-            agentAudioSinks.toMap().also { agentAudioSinks.clear() }
-        }
+        val snapshot =
+            synchronized(agentAudioSinks) {
+                agentAudioSinks.toMap().also { agentAudioSinks.clear() }
+            }
         snapshot.forEach { (track, sink) ->
             try {
                 track.removeSink(sink)
@@ -360,18 +375,22 @@ class WebRTCConnection(
     /**
      * Handle data received event
      */
-    private fun handleDataReceived(data: ByteArray, participant: Participant?) {
+    private fun handleDataReceived(
+        data: ByteArray,
+        participant: Participant?,
+    ) {
         try {
             val message = String(data)
             // Send message to processing queue
             messageChannel.trySend(message)
             // Invoke user onMessage callback with source classification
             try {
-                val source = when (participant) {
-                    is RemoteParticipant -> "ai"
-                    is LocalParticipant -> "user"
-                    else -> "ai"
-                }
+                val source =
+                    when (participant) {
+                        is RemoteParticipant -> "ai"
+                        is LocalParticipant -> "user"
+                        else -> "ai"
+                    }
                 latestConfig?.onMessage?.invoke(source, message)
 
                 // Toggle mode based on source
@@ -392,37 +411,38 @@ class WebRTCConnection(
         // Cancel any existing monitoring
         audioLevelJob?.cancel()
 
-        audioLevelJob = scope.launch {
-            while (isActive) {
-                try {
-                    // Get the first remote participant (the agent)
-                    val remoteParticipant = room.remoteParticipants.values.firstOrNull()
+        audioLevelJob =
+            scope.launch {
+                while (isActive) {
+                    try {
+                        // Get the first remote participant (the agent)
+                        val remoteParticipant = room.remoteParticipants.values.firstOrNull()
 
-                    if (remoteParticipant != null) {
-                        // Get audio level from the remote participant (0.0 to 1.0)
-                        val level = remoteParticipant.audioLevel
+                        if (remoteParticipant != null) {
+                            // Get audio level from the remote participant (0.0 to 1.0)
+                            val level = remoteParticipant.audioLevel
 
-                        // Update StateFlow
-                        _audioLevel.value = level
+                            // Update StateFlow
+                            _audioLevel.value = level
 
-                        // Invoke callback if provided
-                        try {
-                            latestConfig?.onAudioLevelChanged?.invoke(level)
-                        } catch (t: Throwable) {
-                            Log.d("WebRTCConnection", "onAudioLevelChanged callback threw: ${t.message}")
+                            // Invoke callback if provided
+                            try {
+                                latestConfig?.onAudioLevelChanged?.invoke(level)
+                            } catch (t: Throwable) {
+                                Log.d("WebRTCConnection", "onAudioLevelChanged callback threw: ${t.message}")
+                            }
+                        } else {
+                            // No remote participant, reset to 0
+                            _audioLevel.value = 0.0f
                         }
-                    } else {
-                        // No remote participant, reset to 0
-                        _audioLevel.value = 0.0f
+                    } catch (e: Exception) {
+                        Log.d("WebRTCConnection", "Error reading audio level: ${e.message}")
                     }
-                } catch (e: Exception) {
-                    Log.d("WebRTCConnection", "Error reading audio level: ${e.message}")
-                }
 
-                // Update every 50ms for smooth animation (20 FPS)
-                delay(50)
+                    // Update every 50ms for smooth animation (20 FPS)
+                    delay(50)
+                }
             }
-        }
     }
 
     /**
@@ -435,7 +455,8 @@ class WebRTCConnection(
             // Invoke user status change callback if provided
             try {
                 latestConfig?.onStatusChange?.invoke(newState.toConversationStatus())
-            } catch (_: Throwable) { }
+            } catch (_: Throwable) {
+            }
         }
     }
 
@@ -474,14 +495,15 @@ class WebRTCConnection(
             absoluteCaptureTimestampMs: Long,
         ) {
             val cb = callback() ?: return
-            val frame = AudioFrame(
-                audioData = audioData.order(ByteOrder.LITTLE_ENDIAN),
-                bitsPerSample = bitsPerSample,
-                sampleRate = sampleRate,
-                channelCount = numberOfChannels,
-                numberOfFrames = numberOfFrames,
-                absoluteCaptureTimestampMs = absoluteCaptureTimestampMs,
-            )
+            val frame =
+                AudioFrame(
+                    audioData = audioData.order(ByteOrder.LITTLE_ENDIAN),
+                    bitsPerSample = bitsPerSample,
+                    sampleRate = sampleRate,
+                    channelCount = numberOfChannels,
+                    numberOfFrames = numberOfFrames,
+                    absoluteCaptureTimestampMs = absoluteCaptureTimestampMs,
+                )
             try {
                 cb(frame)
             } catch (t: Throwable) {

@@ -26,24 +26,26 @@ interface ClientTool {
 data class ClientToolResult(
     val success: Boolean,
     val result: String,
-    val error: String? = null
+    val error: String? = null,
 ) {
     companion object {
         /**
          * Create a successful result
          */
-        fun success(result: String) = ClientToolResult(
-            success = true,
-            result = result
-        )
+        fun success(result: String) =
+            ClientToolResult(
+                success = true,
+                result = result,
+            )
 
         /**
          * Create a failure result
          */
-        fun failure(error: String) = ClientToolResult(
-            success = false,
-            result = "",
-            error = error
-        )
+        fun failure(error: String) =
+            ClientToolResult(
+                success = false,
+                result = "",
+                error = error,
+            )
     }
 }

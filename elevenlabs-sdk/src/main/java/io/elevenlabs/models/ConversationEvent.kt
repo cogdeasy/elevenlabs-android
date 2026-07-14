@@ -7,12 +7,11 @@ package io.elevenlabs.models
  * between the client and ElevenLabs agents.
  */
 sealed class ConversationEvent {
-
     /**
      * Audio alignment data event (structure can vary; exposed as a map)
      */
     data class AudioAlignment(
-        val alignment: Map<String, Any>
+        val alignment: Map<String, Any>,
     ) : ConversationEvent()
 
     /**
@@ -20,7 +19,7 @@ sealed class ConversationEvent {
      * Structure varies; exposed as a map for flexibility.
      */
     data class AgentResponseMetadata(
-        val metadata: Map<String, Any>
+        val metadata: Map<String, Any>,
     ) : ConversationEvent()
 
     /**
@@ -34,7 +33,7 @@ sealed class ConversationEvent {
     data class AgentChatResponsePart(
         val partType: String,
         val text: String,
-        val eventId: Int? = null
+        val eventId: Int? = null,
     ) : ConversationEvent()
 
     /**
@@ -42,14 +41,14 @@ sealed class ConversationEvent {
      */
     data class TentativeUserTranscript(
         val userTranscript: String,
-        val eventId: Int?
+        val eventId: Int?,
     ) : ConversationEvent()
 
     /**
      * Tentative (partial) agent response text
      */
     data class TentativeAgentResponse(
-        val tentativeAgentResponse: String
+        val tentativeAgentResponse: String,
     ) : ConversationEvent()
 
     /**
@@ -158,7 +157,7 @@ sealed class ConversationEvent {
      */
     data class Ping(
         val eventId: Int,
-        val pingMs: Long?
+        val pingMs: Long?,
     ) : ConversationEvent()
 
     /**
@@ -166,7 +165,7 @@ sealed class ConversationEvent {
      * Matches payload: {"interruption_event":{"event_id":119},"type":"interruption"}
      */
     data class Interruption(
-        val eventId: Int
+        val eventId: Int,
     ) : ConversationEvent()
 
     /**
@@ -177,9 +176,8 @@ sealed class ConversationEvent {
      */
     data class ServerError(
         val code: Int,
-        val message: String?
+        val message: String?,
     ) : ConversationEvent()
-
 }
 
 /**
@@ -188,15 +186,17 @@ sealed class ConversationEvent {
 enum class AgentResponsePartType {
     START,
     DELTA,
-    STOP;
+    STOP,
+    ;
 
     companion object {
         /** Maps a raw value ("start" | "delta" | "stop") to its enum, or null if unrecognized. */
-        fun fromString(value: String): AgentResponsePartType? = when (value) {
-            "start" -> START
-            "delta" -> DELTA
-            "stop" -> STOP
-            else -> null
-        }
+        fun fromString(value: String): AgentResponsePartType? =
+            when (value) {
+                "start" -> START
+                "delta" -> DELTA
+                "stop" -> STOP
+                else -> null
+            }
     }
 }

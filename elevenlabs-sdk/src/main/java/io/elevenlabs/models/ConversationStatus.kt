@@ -30,7 +30,9 @@ enum class ConversationStatus : Status {
     /**
      * The session encountered an error
      */
-    ERROR;
+    ERROR,
+
+    ;
 
     /**
      * Returns true if the session is in an active state (connected)

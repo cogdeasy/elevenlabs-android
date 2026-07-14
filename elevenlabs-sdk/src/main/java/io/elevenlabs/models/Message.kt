@@ -22,7 +22,7 @@ data class Message(
     val content: String,
     val timestamp: Long = System.currentTimeMillis(),
     val eventId: Int? = null,
-    val isPartial: Boolean = false
+    val isPartial: Boolean = false,
 )
 
 /**
@@ -37,7 +37,9 @@ enum class MessageRole {
     /**
      * Message sent by the agent
      */
-    AGENT;
+    AGENT,
+
+    ;
 
     /**
      * Returns true if this message is from the user

@@ -27,7 +27,6 @@ class SoftwareMuteProcessor internal constructor(
         Handler(Looper.getMainLooper()).post(runnable)
     },
 ) : AudioProcessorInterface {
-
     companion object {
         const val DEFAULT_THRESHOLD_DB: Float = -35f
         const val DEFAULT_THROTTLE_MS: Long = 3_000L
@@ -64,11 +63,18 @@ class SoftwareMuteProcessor internal constructor(
 
     override fun isEnabled(): Boolean = true
 
-    override fun initializeAudioProcessing(sampleRateHz: Int, numChannels: Int) {}
+    override fun initializeAudioProcessing(
+        sampleRateHz: Int,
+        numChannels: Int,
+    ) {}
 
     override fun resetAudioProcessing(newRate: Int) {}
 
-    override fun processAudio(numBands: Int, numFrames: Int, buffer: ByteBuffer) {
+    override fun processAudio(
+        numBands: Int,
+        numFrames: Int,
+        buffer: ByteBuffer,
+    ) {
         if (!muted) return
 
         buffer.order(ByteOrder.LITTLE_ENDIAN)
@@ -102,10 +108,10 @@ class SoftwareMuteProcessor internal constructor(
         if (shouldFire) {
             val level = fireLevel
             dispatchMutedSpeech {
-                try { 
-                    onMutedSpeech?.invoke(MutedSpeechEvent(audioLevel = level)) 
-                } catch (e: Exception) { 
-                    Log.e("SoftwareMuteProcessor", "onMutedSpeech callback threw: ${e.message}", e) 
+                try {
+                    onMutedSpeech?.invoke(MutedSpeechEvent(audioLevel = level))
+                } catch (e: Exception) {
+                    Log.e("SoftwareMuteProcessor", "onMutedSpeech callback threw: ${e.message}", e)
                 }
             }
         }
@@ -147,7 +153,11 @@ class SoftwareMuteProcessor internal constructor(
         return sqrt(sumSquares / numFrames)
     }
 
-    private fun flatRms(floatBuffer: FloatBuffer, startPos: Int, count: Int): Float {
+    private fun flatRms(
+        floatBuffer: FloatBuffer,
+        startPos: Int,
+        count: Int,
+    ): Float {
         var sumSquares = 0.0
         for (i in 0 until count) {
             val normalized = floatBuffer.get(startPos + i) / INT16_NORMALIZER
