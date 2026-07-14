@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="build.gradle.kts">
+        <error line="8" column="1" source="standard:indent" />
+        <error line="12" column="1" source="standard:indent" />
+        <error line="26" column="37" source="standard:trailing-comma-on-call-site" />
+        <error line="81" column="1" source="standard:final-newline" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/MainActivity.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="57" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="76" column="13" source="standard:function-naming" />
+        <error line="95" column="30" source="standard:multiline-expression-wrapping" />
+        <error line="99" column="20" source="standard:chain-method-continuation" />
+        <error line="105" column="18" source="standard:chain-method-continuation" />
+        <error line="130" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="135" column="26" source="standard:multiline-expression-wrapping" />
+        <error line="151" column="29" source="standard:multiline-expression-wrapping" />
+        <error line="161" column="21" source="standard:multiline-expression-wrapping" />
+        <error line="179" column="41" source="standard:condition-wrapping" />
+        <error line="180" column="64" source="standard:condition-wrapping" />
+        <error line="180" column="76" source="standard:wrapping" />
+        <error line="195" column="13" source="standard:function-naming" />
+        <error line="200" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="218" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="219" column="18" source="standard:argument-list-wrapping" />
+        <error line="221" column="23" source="standard:multiline-expression-wrapping" />
+        <error line="221" column="30" source="standard:chain-method-continuation" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/models/TextChatModels.kt">
+        <error line="1" column="1" source="standard:filename" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/models/UiState.kt">
+        <error line="8" column="5" source="standard:blank-line-before-declaration" />
+        <error line="9" column="5" source="standard:blank-line-before-declaration" />
+        <error line="10" column="5" source="standard:blank-line-before-declaration" />
+        <error line="11" column="5" source="standard:blank-line-before-declaration" />
+        <error line="12" column="1" source="standard:final-newline" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/ui/AppTheme.kt">
+        <error line="8" column="30" source="standard:multiline-expression-wrapping" />
+        <error line="30" column="5" source="standard:function-naming" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/ui/StartScreen.kt">
+        <error line="31" column="5" source="standard:function-naming" />
+        <error line="40" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="49" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="62" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="73" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="85" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="91" column="13" source="standard:function-naming" />
+        <error line="104" column="13" source="standard:function-naming" />
+        <error line="117" column="13" source="standard:function-naming" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/ui/TextChatScreen.kt">
+        <error line="22" column="1" source="standard:no-unused-imports" />
+        <error line="34" column="1" source="standard:no-unused-imports" />
+        <error line="56" column="1" source="standard:no-unused-imports" />
+        <error line="68" column="5" source="standard:function-naming" />
+        <error line="83" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="106" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="115" column="13" source="standard:function-naming" />
+        <error line="120" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="145" column="14" source="standard:function-naming" />
+        <error line="179" column="13" source="standard:function-naming" />
+        <error line="186" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="193" column="21" source="standard:chain-method-continuation" />
+        <error line="208" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="215" column="21" source="standard:chain-method-continuation" />
+        <error line="228" column="13" source="standard:function-naming" />
+        <error line="234" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="239" column="17" source="standard:chain-method-continuation" />
+        <error line="254" column="13" source="standard:function-naming" />
+        <error line="259" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="260" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="263" column="38" source="standard:trailing-comma-on-call-site" />
+        <error line="270" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="280" column="13" source="standard:function-naming" />
+        <error line="296" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="301" column="13" source="standard:chain-method-continuation" />
+        <error line="307" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="310" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="336" column="22" source="standard:multiline-expression-wrapping" />
+        <error line="349" column="13" source="standard:function-naming" />
+        <error line="355" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="373" column="63" source="standard:multiline-expression-wrapping" />
+        <error line="373" column="63" source="standard:function-signature" />
+        <error line="383" column="13" source="standard:function-naming" />
+        <error line="387" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="392" column="39" source="standard:trailing-comma-on-call-site" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/ui/VoiceScreen.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="9" column="1" source="standard:no-unused-imports" />
+        <error line="19" column="1" source="standard:no-unused-imports" />
+        <error line="60" column="5" source="standard:function-naming" />
+        <error line="80" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="92" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="175" column="13" source="standard:function-naming" />
+        <error line="176" column="26" source="standard:multiline-expression-wrapping" />
+        <error line="184" column="20" source="standard:multiline-expression-wrapping" />
+        <error line="193" column="13" source="standard:function-naming" />
+        <error line="194" column="26" source="standard:multiline-expression-wrapping" />
+        <error line="201" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="211" column="13" source="standard:function-naming" />
+        <error line="226" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="238" column="13" source="standard:function-naming" />
+        <error line="248" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="252" column="25" source="standard:multiline-expression-wrapping" />
+        <error line="276" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="284" column="28" source="standard:multiline-expression-wrapping" />
+        <error line="296" column="13" source="standard:function-naming" />
+        <error line="303" column="24" source="standard:multiline-expression-wrapping" />
+        <error line="320" column="13" source="standard:function-naming" />
+        <error line="341" column="13" source="standard:function-naming" />
+        <error line="360" column="1" source="standard:no-consecutive-blank-lines" />
+    </file>
+    <file name="src/main/java/io/elevenlabs/example/viewmodels/ConversationViewModel.kt">
+        <error line="28" column="29" source="standard:class-signature" />
+        <error line="28" column="53" source="standard:class-signature" />
+        <error line="29" column="1" source="standard:no-empty-first-line-in-class-body" />
+        <error line="80" column="27" source="standard:function-signature" />
+        <error line="80" column="53" source="standard:function-signature" />
+        <error line="80" column="70" source="standard:function-signature" />
+        <error line="94" column="30" source="standard:multiline-expression-wrapping" />
+        <error line="102" column="35" source="standard:multiline-expression-wrapping" />
+        <error line="103" column="41" source="standard:multiline-expression-wrapping" />
+        <error line="105" column="47" source="standard:multiline-expression-wrapping" />
+        <error line="112" column="26" source="standard:trailing-comma-on-call-site" />
+        <error line="177" column="28" source="standard:chain-method-continuation" />
+        <error line="177" column="31" source="standard:argument-list-wrapping" />
+        <error line="177" column="36" source="standard:argument-list-wrapping" />
+        <error line="177" column="141" source="standard:max-line-length" />
+        <error line="177" column="144" source="standard:argument-list-wrapping" />
+        <error line="186" column="42" source="standard:multiline-expression-wrapping" />
+        <error line="202" column="44" source="standard:multiline-expression-wrapping" />
+        <error line="202" column="44" source="standard:wrapping" />
+        <error line="202" column="44" source="standard:argument-list-wrapping" />
+        <error line="208" column="25" source="standard:wrapping" />
+        <error line="208" column="26" source="standard:argument-list-wrapping" />
+        <error line="241" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="362" column="47" source="standard:multiline-expression-wrapping" />
+        <error line="362" column="47" source="standard:function-signature" />
+    </file>
+    <file name="src/test/java/io/elevenlabs/android/ExampleUnitTest.kt">
+        <error line="3" column="1" source="standard:import-ordering" />
+        <error line="5" column="1" source="standard:no-wildcard-imports" />
+        <error line="17" column="1" source="standard:final-newline" />
+    </file>
+</baseline>
