@@ -26,7 +26,16 @@ subprojects {
         buildUponDefaultConfig = true
         config.setFrom(rootProject.file("config/detekt/detekt.yml"))
         baseline = file("detekt-baseline.xml")
-        source.setFrom(files("src/main/java", "src/test/java", "src/androidTest/java"))
+        source.setFrom(
+            files(
+                "src/main/java",
+                "src/main/kotlin",
+                "src/test/java",
+                "src/test/kotlin",
+                "src/androidTest/java",
+                "src/androidTest/kotlin",
+            ),
+        )
     }
 
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
