@@ -16,7 +16,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class SdkInitializationTest {
-
     @Test
     fun instrumentationContextIsAvailable() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -42,11 +41,10 @@ class SdkInitializationTest {
     @Test
     fun clientToolRegistryRegistersAndUnregistersTools() {
         val registry = ClientToolRegistry()
-        val tool = object : ClientTool {
-            override suspend fun execute(parameters: Map<String, Any>): ClientToolResult {
-                return ClientToolResult.success("ok")
+        val tool =
+            object : ClientTool {
+                override suspend fun execute(parameters: Map<String, Any>): ClientToolResult = ClientToolResult.success("ok")
             }
-        }
 
         registry.registerTool("echo", tool)
         assertTrue(registry.isToolRegistered("echo"))

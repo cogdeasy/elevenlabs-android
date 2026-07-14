@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicReference
  */
 @RunWith(AndroidJUnit4::class)
 class TextOnlyWebSocketTest {
-
     private lateinit var server: MockWebServer
     private lateinit var client: OkHttpClient
     private val serverSockets = ConcurrentLinkedQueue<WebSocket>()
@@ -52,24 +51,31 @@ class TextOnlyWebSocketTest {
 
     private fun apiBaseUrl(): String = server.url("/").toString().removeSuffix("/")
 
-    private fun newConnection(): WebSocketConnection =
-        WebSocketConnection(client = client).also { connections.add(it) }
+    private fun newConnection(): WebSocketConnection = WebSocketConnection(client = client).also { connections.add(it) }
 
     private fun enqueueServerWs(
         onOpen: ((WebSocket) -> Unit)? = null,
         onMessage: ((WebSocket, String) -> Unit)? = null,
     ) {
         server.enqueue(
-            MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
-                override fun onOpen(webSocket: WebSocket, response: Response) {
-                    serverSockets.add(webSocket)
-                    onOpen?.invoke(webSocket)
-                }
+            MockResponse().withWebSocketUpgrade(
+                object : WebSocketListener() {
+                    override fun onOpen(
+                        webSocket: WebSocket,
+                        response: Response,
+                    ) {
+                        serverSockets.add(webSocket)
+                        onOpen?.invoke(webSocket)
+                    }
 
-                override fun onMessage(webSocket: WebSocket, text: String) {
-                    onMessage?.invoke(webSocket, text)
-                }
-            })
+                    override fun onMessage(
+                        webSocket: WebSocket,
+                        text: String,
+                    ) {
+                        onMessage?.invoke(webSocket, text)
+                    }
+                },
+            ),
         )
     }
 
@@ -84,25 +90,26 @@ class TextOnlyWebSocketTest {
                     "conversation_initiation_metadata_event":{
                       "conversation_id":"conv_device_1",
                       "agent_output_audio_format":"pcm_16000",
-                      "user_input_audio_format":"pcm_16000"}}"""
+                      "user_input_audio_format":"pcm_16000"}}""",
             )
         })
 
         val connection = newConnection()
-        val config = ConversationConfig(
-            agentId = "agent_device",
-            textOnly = true,
-            onConnect = { id ->
-                conversationId.set(id)
-                connectedLatch.countDown()
-            }
-        )
+        val config =
+            ConversationConfig(
+                agentId = "agent_device",
+                textOnly = true,
+                onConnect = { id ->
+                    conversationId.set(id)
+                    connectedLatch.countDown()
+                },
+            )
 
         runBlocking { connection.connect(apiBaseUrl(), config) }
 
         assertTrue(
             "Expected onConnect within 10s",
-            connectedLatch.await(10, TimeUnit.SECONDS)
+            connectedLatch.await(10, TimeUnit.SECONDS),
         )
         assertEquals("conv_device_1", conversationId.get())
         assertEquals(ConnectionState.CONNECTED, connection.connectionState)
@@ -120,7 +127,7 @@ class TextOnlyWebSocketTest {
             onOpen = { ws ->
                 ws.send(
                     """{"type":"conversation_initiation_metadata",
-                        "conversation_initiation_metadata_event":{"conversation_id":"conv_device_2"}}"""
+                        "conversation_initiation_metadata_event":{"conversation_id":"conv_device_2"}}""",
                 )
             },
             onMessage = { ws, text ->
@@ -132,26 +139,27 @@ class TextOnlyWebSocketTest {
                         userMessageReceived.countDown()
                         ws.send(
                             """{"type":"agent_response",
-                                "agent_response_event":{"agent_response":"Hello from mock","event_id":1}}"""
+                                "agent_response_event":{"agent_response":"Hello from mock","event_id":1}}""",
                         )
                     }
                 }
-            }
+            },
         )
 
         val connection = newConnection()
         val connectedLatch = CountDownLatch(1)
-        val config = ConversationConfig(
-            agentId = "agent_device",
-            textOnly = true,
-            onConnect = { connectedLatch.countDown() }
-        )
+        val config =
+            ConversationConfig(
+                agentId = "agent_device",
+                textOnly = true,
+                onConnect = { connectedLatch.countDown() },
+            )
 
         connection.setOnMessageListener { messageJson ->
             val obj = JSONObject(messageJson)
             if (obj.optString("type") == "agent_response") {
                 receivedAgentText.set(
-                    obj.getJSONObject("agent_response_event").optString("agent_response")
+                    obj.getJSONObject("agent_response_event").optString("agent_response"),
                 )
                 agentResponseReceived.countDown()
             }
@@ -162,33 +170,48 @@ class TextOnlyWebSocketTest {
         assertTrue("Expected onConnect", connectedLatch.await(10, TimeUnit.SECONDS))
         assertTrue(
             "Server should receive initiation payload",
-            initiationReceived.await(10, TimeUnit.SECONDS)
+            initiationReceived.await(10, TimeUnit.SECONDS),
         )
 
         connection.sendMessage(
-            io.elevenlabs.network.OutgoingEvent.UserMessage(text = "hi agent")
+            io.elevenlabs.network.OutgoingEvent
+                .UserMessage(text = "hi agent"),
         )
 
         assertTrue(
             "Server should receive user_message",
-            userMessageReceived.await(10, TimeUnit.SECONDS)
+            userMessageReceived.await(10, TimeUnit.SECONDS),
         )
         assertEquals("hi agent", receivedUserText.get())
         assertTrue(
             "Client should receive agent_response",
-            agentResponseReceived.await(10, TimeUnit.SECONDS)
+            agentResponseReceived.await(10, TimeUnit.SECONDS),
         )
         assertEquals("Hello from mock", receivedAgentText.get())
     }
 
     @Test
     fun disconnectResetsConnectionState() {
-        enqueueServerWs()
+        val connectedLatch = CountDownLatch(1)
+        enqueueServerWs(onOpen = { ws ->
+            ws.send(
+                """{"type":"conversation_initiation_metadata",
+                    "conversation_initiation_metadata_event":{"conversation_id":"conv_device_3"}}""",
+            )
+        })
 
         val connection = newConnection()
-        val config = ConversationConfig(agentId = "agent_device", textOnly = true)
+        val config =
+            ConversationConfig(
+                agentId = "agent_device",
+                textOnly = true,
+                onConnect = { connectedLatch.countDown() },
+            )
 
         runBlocking { connection.connect(apiBaseUrl(), config) }
+        assertTrue("Expected onConnect", connectedLatch.await(10, TimeUnit.SECONDS))
+        assertEquals(ConnectionState.CONNECTED, connection.connectionState)
+
         connection.disconnect()
 
         assertEquals(ConnectionState.IDLE, connection.connectionState)
