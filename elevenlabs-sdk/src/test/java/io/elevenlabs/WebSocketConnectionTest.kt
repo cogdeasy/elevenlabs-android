@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 class WebSocketConnectionTest {
-
     private lateinit var server: MockWebServer
     private lateinit var client: OkHttpClient
     private val serverSockets = ConcurrentLinkedQueue<WebSocket>()
@@ -62,8 +61,7 @@ class WebSocketConnectionTest {
     private fun apiBaseUrl(): String = server.url("/").toString().removeSuffix("/")
 
     /** Tracks created connections so tearDown can clean them up. */
-    private fun newConnection(): WebSocketConnection =
-        WebSocketConnection(client = client).also { connections.add(it) }
+    private fun newConnection(): WebSocketConnection = WebSocketConnection(client = client).also { connections.add(it) }
 
     /**
      * Enqueue a WebSocket upgrade that records the server-side socket and lets the
@@ -74,48 +72,61 @@ class WebSocketConnectionTest {
         onOpen: ((WebSocket) -> Unit)? = null,
         onMessage: ((WebSocket, String) -> Unit)? = null,
     ) {
-        server.enqueue(MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                serverSockets.add(webSocket)
-                onOpen?.invoke(webSocket)
-            }
+        server.enqueue(
+            MockResponse().withWebSocketUpgrade(
+                object : WebSocketListener() {
+                    override fun onOpen(
+                        webSocket: WebSocket,
+                        response: Response,
+                    ) {
+                        serverSockets.add(webSocket)
+                        onOpen?.invoke(webSocket)
+                    }
 
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                onMessage?.invoke(webSocket, text)
-            }
-        }))
+                    override fun onMessage(
+                        webSocket: WebSocket,
+                        text: String,
+                    ) {
+                        onMessage?.invoke(webSocket, text)
+                    }
+                },
+            ),
+        )
     }
 
     @Test
     fun `buildWebSocketUrl converts https endpoint to wss`() {
-        val url = WebSocketConnection.buildWebSocketUrl(
-            "https://api.elevenlabs.io",
-            signedUrl = null,
-            agentId = "agent-123"
-        )
+        val url =
+            WebSocketConnection.buildWebSocketUrl(
+                "https://api.elevenlabs.io",
+                signedUrl = null,
+                agentId = "agent-123",
+            )
         assertEquals("wss://api.elevenlabs.io/v1/convai/conversation?agent_id=agent-123", url)
     }
 
     @Test
     fun `buildWebSocketUrl converts http endpoint to ws`() {
-        val url = WebSocketConnection.buildWebSocketUrl(
-            "http://localhost:8080",
-            signedUrl = null,
-            agentId = "agent-123"
-        )
+        val url =
+            WebSocketConnection.buildWebSocketUrl(
+                "http://localhost:8080",
+                signedUrl = null,
+                agentId = "agent-123",
+            )
         assertEquals("ws://localhost:8080/v1/convai/conversation?agent_id=agent-123", url)
     }
 
     @Test
     fun `buildWebSocketUrl preserves wss scheme`() {
-        val url = WebSocketConnection.buildWebSocketUrl(
-            "wss://api.eu.residency.elevenlabs.io",
-            signedUrl = null,
-            agentId = "agent-123"
-        )
+        val url =
+            WebSocketConnection.buildWebSocketUrl(
+                "wss://api.eu.residency.elevenlabs.io",
+                signedUrl = null,
+                agentId = "agent-123",
+            )
         assertEquals(
             "wss://api.eu.residency.elevenlabs.io/v1/convai/conversation?agent_id=agent-123",
-            url
+            url,
         )
     }
 
@@ -125,40 +136,43 @@ class WebSocketConnectionTest {
             WebSocketConnection.buildWebSocketUrl(
                 "https://api.elevenlabs.io",
                 signedUrl = "raw-signature-not-a-url",
-                agentId = "agent-123"
+                agentId = "agent-123",
             )
         }
     }
 
     @Test
     fun `buildWebSocketUrl trims trailing slashes`() {
-        val url = WebSocketConnection.buildWebSocketUrl(
-            "https://api.elevenlabs.io/",
-            signedUrl = null,
-            agentId = "agent-123"
-        )
+        val url =
+            WebSocketConnection.buildWebSocketUrl(
+                "https://api.elevenlabs.io/",
+                signedUrl = null,
+                agentId = "agent-123",
+            )
         assertEquals("wss://api.elevenlabs.io/v1/convai/conversation?agent_id=agent-123", url)
     }
 
     @Test
     fun `buildWebSocketUrl returns signedUrl verbatim when wss`() {
         val signed = "wss://api.elevenlabs.io/v1/convai/conversation?agent_id=X&conversation_signature=SIG"
-        val url = WebSocketConnection.buildWebSocketUrl(
-            "https://api.elevenlabs.io",
-            signedUrl = signed,
-            agentId = null
-        )
+        val url =
+            WebSocketConnection.buildWebSocketUrl(
+                "https://api.elevenlabs.io",
+                signedUrl = signed,
+                agentId = null,
+            )
         assertEquals(signed, url)
     }
 
     @Test
     fun `buildWebSocketUrl returns signedUrl verbatim when ws`() {
         val signed = "ws://localhost:1234/v1/convai/conversation?agent_id=X&conversation_signature=SIG"
-        val url = WebSocketConnection.buildWebSocketUrl(
-            "http://localhost:1234",
-            signedUrl = signed,
-            agentId = null
-        )
+        val url =
+            WebSocketConnection.buildWebSocketUrl(
+                "http://localhost:1234",
+                signedUrl = signed,
+                agentId = null,
+            )
         assertEquals(signed, url)
     }
 
@@ -168,7 +182,7 @@ class WebSocketConnectionTest {
             WebSocketConnection.buildWebSocketUrl(
                 "https://api.elevenlabs.io",
                 signedUrl = null,
-                agentId = null
+                agentId = null,
             )
         }
     }
@@ -183,7 +197,7 @@ class WebSocketConnectionTest {
             onOpen = { opened.countDown() },
             onMessage = { _, text ->
                 if (firstFrame.compareAndSet(null, text)) initiationReceived.countDown()
-            }
+            },
         )
 
         val connection = newConnection()
@@ -198,7 +212,7 @@ class WebSocketConnectionTest {
         assertNotNull(payload)
         assertTrue(
             "first frame should be conversation_initiation_client_data, got: $payload",
-            payload.contains("\"type\":\"conversation_initiation_client_data\"")
+            payload.contains("\"type\":\"conversation_initiation_client_data\""),
         )
     }
 
@@ -240,19 +254,20 @@ class WebSocketConnectionTest {
 
         val onConnectFired = CountDownLatch(1)
         val capturedId = AtomicReference<String>()
-        val config = ConversationConfig(
-            agentId = "agent-xyz",
-            onConnect = { id ->
-                if (capturedId.compareAndSet(null, id)) onConnectFired.countDown()
-            }
-        )
+        val config =
+            ConversationConfig(
+                agentId = "agent-xyz",
+                onConnect = { id ->
+                    if (capturedId.compareAndSet(null, id)) onConnectFired.countDown()
+                },
+            )
         val connection = newConnection()
         runBlocking { connection.connect(apiBaseUrl(), config) }
         assertTrue(ready.await(3, TimeUnit.SECONDS))
 
         // Production server nests under conversation_initiation_metadata_event.
         serverSocket.get().send(
-            """{"type":"conversation_initiation_metadata","conversation_initiation_metadata_event":{"conversation_id":"conv_42","agent_output_audio_format":"pcm_16000","user_input_audio_format":"pcm_16000"}}"""
+            """{"type":"conversation_initiation_metadata","conversation_initiation_metadata_event":{"conversation_id":"conv_42","agent_output_audio_format":"pcm_16000","user_input_audio_format":"pcm_16000"}}""",
         )
 
         assertTrue("onConnect fired", onConnectFired.await(3, TimeUnit.SECONDS))
@@ -271,12 +286,13 @@ class WebSocketConnectionTest {
         val disconnected = CountDownLatch(1)
         val capturedDetails = AtomicReference<DisconnectionDetails>()
         val capturedState = AtomicReference<ConnectionState>()
-        val config = ConversationConfig(
-            agentId = "agent-xyz",
-            onDisconnect = { details ->
-                if (capturedDetails.compareAndSet(null, details)) disconnected.countDown()
-            }
-        )
+        val config =
+            ConversationConfig(
+                agentId = "agent-xyz",
+                onDisconnect = { details ->
+                    if (capturedDetails.compareAndSet(null, details)) disconnected.countDown()
+                },
+            )
 
         val connection = newConnection()
         connection.setOnConnectionStateListener { state ->
@@ -304,12 +320,13 @@ class WebSocketConnectionTest {
 
         val disconnected = CountDownLatch(1)
         val captured = AtomicReference<DisconnectionDetails>()
-        val config = ConversationConfig(
-            agentId = "agent-xyz",
-            onDisconnect = { details ->
-                if (captured.compareAndSet(null, details)) disconnected.countDown()
-            }
-        )
+        val config =
+            ConversationConfig(
+                agentId = "agent-xyz",
+                onDisconnect = { details ->
+                    if (captured.compareAndSet(null, details)) disconnected.countDown()
+                },
+            )
 
         val connection = newConnection()
         runBlocking { connection.connect(apiBaseUrl(), config) }
@@ -320,7 +337,7 @@ class WebSocketConnectionTest {
         assertTrue("onDisconnect fired", disconnected.await(3, TimeUnit.SECONDS))
         assertTrue(
             "expected Error, got ${captured.get()}",
-            captured.get() is DisconnectionDetails.Error
+            captured.get() is DisconnectionDetails.Error,
         )
     }
 
@@ -331,12 +348,13 @@ class WebSocketConnectionTest {
 
         val disconnected = CountDownLatch(1)
         val captured = AtomicReference<DisconnectionDetails>()
-        val config = ConversationConfig(
-            agentId = "agent-xyz",
-            onDisconnect = { details ->
-                if (captured.compareAndSet(null, details)) disconnected.countDown()
-            }
-        )
+        val config =
+            ConversationConfig(
+                agentId = "agent-xyz",
+                onDisconnect = { details ->
+                    if (captured.compareAndSet(null, details)) disconnected.countDown()
+                },
+            )
 
         val connection = newConnection()
         runBlocking { connection.connect(apiBaseUrl(), config) }

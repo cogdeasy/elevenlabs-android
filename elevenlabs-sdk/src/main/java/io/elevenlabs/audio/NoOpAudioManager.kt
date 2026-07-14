@@ -9,7 +9,6 @@ package io.elevenlabs.audio
  * intentionally inert.
  */
 class NoOpAudioManager : AudioManager {
-
     private var listener: AudioStateListener? = null
     private var volume: Float = 1.0f
 

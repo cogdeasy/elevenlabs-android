@@ -1,12 +1,13 @@
 package io.elevenlabs.network
 
 import android.util.Log
-import io.elevenlabs.models.ConversationEvent
-import io.elevenlabs.models.ConversationMode
-import io.elevenlabs.models.ConversationStatus
-import com.google.gson.*
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
+import io.elevenlabs.models.ConversationEvent
 
 /**
  * JSON event processing for real-time conversation protocol
@@ -16,10 +17,10 @@ import com.google.gson.reflect.TypeToken
  * error handling for malformed messages.
  */
 object ConversationEventParser {
-
-    private val gson = GsonBuilder()
-        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-        .create()
+    private val gson =
+        GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create()
 
     /**
      * Parse an incoming JSON event string into a ConversationEvent
@@ -27,8 +28,8 @@ object ConversationEventParser {
      * @param json The JSON string to parse
      * @return ConversationEvent instance or null if parsing fails
      */
-    fun parseIncomingEvent(json: String): ConversationEvent? {
-        return try {
+    fun parseIncomingEvent(json: String): ConversationEvent? =
+        try {
             val jsonObject = JsonParser.parseString(json).asJsonObject
             val eventType = getEventType(jsonObject)
 
@@ -58,7 +59,6 @@ object ConversationEventParser {
             handleParsingError(json, e)
             null
         }
-    }
 
     /**
      * Parse ping event
@@ -77,16 +77,12 @@ object ConversationEventParser {
      * @param event The event to serialize
      * @return JSON string representation of the event
      */
-    fun serializeOutgoingEvent(event: OutgoingEvent): String {
-        return gson.toJson(event)
-    }
+    fun serializeOutgoingEvent(event: OutgoingEvent): String = gson.toJson(event)
 
     /**
      * Extract the event type from a JSON object
      */
-    private fun getEventType(jsonObject: JsonObject): String? {
-        return jsonObject.get("type")?.asString
-    }
+    private fun getEventType(jsonObject: JsonObject): String? = jsonObject.get("type")?.asString
 
     /** Extracts an optional `event_id`, or null when absent/JSON null. */
     private fun JsonObject?.parseEventId(): Int? {
@@ -102,7 +98,7 @@ object ConversationEventParser {
         val content = obj?.get("agent_response")?.asString ?: ""
         return ConversationEvent.AgentResponse(
             agentResponse = content,
-            eventId = obj.parseEventId()
+            eventId = obj.parseEventId(),
         )
     }
 
@@ -114,7 +110,7 @@ object ConversationEventParser {
         val content = obj?.get("user_transcript")?.asString ?: ""
         return ConversationEvent.UserTranscript(
             userTranscript = content,
-            eventId = obj.parseEventId()
+            eventId = obj.parseEventId(),
         )
     }
 
@@ -124,45 +120,48 @@ object ConversationEventParser {
      */
     private fun parseClientToolCall(jsonObject: JsonObject): ConversationEvent.ClientToolCall {
         // Payloads can be nested under "client_tool_call", "agent_tool_request", or be flat
-        val obj = jsonObject.getAsJsonObject("client_tool_call")
-            ?: jsonObject.getAsJsonObject("agent_tool_request")
-            ?: jsonObject
+        val obj =
+            jsonObject.getAsJsonObject("client_tool_call")
+                ?: jsonObject.getAsJsonObject("agent_tool_request")
+                ?: jsonObject
 
         val parametersJson = obj.get("parameters")?.asJsonObject
         val parameters = mutableMapOf<String, Any>()
 
         parametersJson?.entrySet()?.forEach { entry ->
-            parameters[entry.key] = when {
-                entry.value.isJsonPrimitive -> {
-                    val primitive = entry.value.asJsonPrimitive
-                    when {
-                        primitive.isString -> primitive.asString
-                        primitive.isNumber -> primitive.asNumber
-                        primitive.isBoolean -> primitive.asBoolean
-                        else -> primitive.asString
+            parameters[entry.key] =
+                when {
+                    entry.value.isJsonPrimitive -> {
+                        val primitive = entry.value.asJsonPrimitive
+                        when {
+                            primitive.isString -> primitive.asString
+                            primitive.isNumber -> primitive.asNumber
+                            primitive.isBoolean -> primitive.asBoolean
+                            else -> primitive.asString
+                        }
                     }
+                    entry.value.isJsonArray -> gson.fromJson(entry.value, List::class.java)
+                    entry.value.isJsonObject -> gson.fromJson(entry.value, Map::class.java)
+                    else -> entry.value.toString()
                 }
-                entry.value.isJsonArray -> gson.fromJson(entry.value, List::class.java)
-                entry.value.isJsonObject -> gson.fromJson(entry.value, Map::class.java)
-                else -> entry.value.toString()
-            }
         }
 
         // Determine expects_response value
         // - If explicitly set in payload, use that value
         // - If not present, default to true for client tools (most client tools expect responses)
-        // 
+        //
         // Rationale: The server may not include expects_response in the payload even when the tool
         // configuration has expects_response: true. Since the primary purpose of client tools is to
         // execute on the client and return results to the agent, defaulting to true is the safer choice.
         // Tools that don't expect responses (fire-and-forget) should explicitly set expects_response: false.
         val expectsResponseElement = obj.get("expects_response")
-        val expectsResponse = if (expectsResponseElement != null && !expectsResponseElement.isJsonNull) {
-            expectsResponseElement.asBoolean
-        } else {
-            // Default to true when not specified - client tools typically expect responses
-            true
-        }
+        val expectsResponse =
+            if (expectsResponseElement != null && !expectsResponseElement.isJsonNull) {
+                expectsResponseElement.asBoolean
+            } else {
+                // Default to true when not specified - client tools typically expect responses
+                true
+            }
 
         return ConversationEvent.ClientToolCall(
             toolName = obj.get("tool_name")?.asString ?: "",
@@ -179,7 +178,7 @@ object ConversationEventParser {
         return ConversationEvent.AgentResponseCorrection(
             originalAgentResponse = original,
             correctedAgentResponse = corrected,
-            eventId = obj.parseEventId()
+            eventId = obj.parseEventId(),
         )
     }
 
@@ -189,7 +188,7 @@ object ConversationEventParser {
             toolName = obj.get("tool_name")?.asString ?: "",
             toolCallId = obj.get("tool_call_id")?.asString ?: "",
             toolType = obj.get("tool_type")?.asString ?: "",
-            isError = obj.get("is_error")?.asBoolean ?: false
+            isError = obj.get("is_error")?.asBoolean ?: false,
         )
     }
 
@@ -204,32 +203,39 @@ object ConversationEventParser {
             val alignmentMap: Map<String, Any> = gson.fromJson(obj, mapType)
             ConversationEvent.AudioAlignment(alignment = alignmentMap)
         } else {
-            val b64 = when {
-                obj.has("audio_base64") -> obj.get("audio_base64")?.asString ?: ""
-                obj.has("audio_base_64") -> obj.get("audio_base_64")?.asString ?: ""
-                else -> ""
-            }
+            val b64 =
+                when {
+                    obj.has("audio_base64") -> obj.get("audio_base64")?.asString ?: ""
+                    obj.has("audio_base_64") -> obj.get("audio_base_64")?.asString ?: ""
+                    else -> ""
+                }
             val eventId = obj.get("event_id")?.asInt ?: 0
             ConversationEvent.Audio(
                 eventId = eventId,
-                audioBase64 = b64
+                audioBase64 = b64,
             )
         }
     }
 
     private fun parseConversationInitiationMetadata(jsonObject: JsonObject): ConversationEvent.ConversationInitiationMetadata {
-        val obj = jsonObject.getAsJsonObject("conversation_initiation_metadata") ?: jsonObject
+        // Server nests the payload under conversation_initiation_metadata_event;
+        // the unsuffixed key and flat root are tolerated for forwards/backwards compatibility.
+        val obj =
+            jsonObject.getAsJsonObject("conversation_initiation_metadata_event")
+                ?: jsonObject.getAsJsonObject("conversation_initiation_metadata")
+                ?: jsonObject
         return ConversationEvent.ConversationInitiationMetadata(
             conversationId = obj.get("conversation_id")?.asString ?: "",
             agentOutputAudioFormat = obj.get("agent_output_audio_format")?.asString ?: "",
-            userInputAudioFormat = obj.get("user_input_audio_format")?.asString ?: ""
+            userInputAudioFormat = obj.get("user_input_audio_format")?.asString ?: "",
         )
     }
 
     private fun logAgentToolResponse(jsonObject: JsonObject) {
         try {
-            Log.d("ConversationEventParser", "Agent tool response: ${jsonObject}")
-        } catch (_: Exception) { }
+            Log.d("ConversationEventParser", "Agent tool response: $jsonObject")
+        } catch (_: Exception) {
+        }
     }
 
     /**
@@ -282,8 +288,9 @@ object ConversationEventParser {
      * Supports nested 'agent_response_metadata_event' or flat object with 'type' removed.
      */
     private fun parseAgentResponseMetadata(jsonObject: JsonObject): ConversationEvent.AgentResponseMetadata {
-        val content = jsonObject.getAsJsonObject("agent_response_metadata_event")
-            ?: jsonObject.deepCopy().apply { remove("type") }
+        val content =
+            jsonObject.getAsJsonObject("agent_response_metadata_event")
+                ?: jsonObject.deepCopy().apply { remove("type") }
         val mapType = object : com.google.gson.reflect.TypeToken<Map<String, Any>>() {}.type
         val meta: Map<String, Any> = gson.fromJson(content, mapType)
         return ConversationEvent.AgentResponseMetadata(metadata = meta)
@@ -303,7 +310,7 @@ object ConversationEventParser {
         return ConversationEvent.AgentChatResponsePart(
             partType = type,
             text = text,
-            eventId = obj.parseEventId()
+            eventId = obj.parseEventId(),
         )
     }
 
@@ -327,7 +334,7 @@ object ConversationEventParser {
         val eventId = obj.get("event_id")?.let { if (it.isJsonNull) null else it.asInt }
         return ConversationEvent.TentativeUserTranscript(
             userTranscript = text,
-            eventId = eventId
+            eventId = eventId,
         )
     }
 
@@ -339,18 +346,23 @@ object ConversationEventParser {
      */
     private fun parseError(jsonObject: JsonObject): ConversationEvent.ServerError {
         val errorEvent = jsonObject.getAsJsonObject("error_event")
-        val code = errorEvent?.get("code")?.asInt
-            ?: jsonObject.get("code")?.asInt
-            ?: 1011
-        val message = errorEvent?.get("message")?.let { if (it.isJsonNull) null else it.asString }
-            ?: jsonObject.get("message")?.let { if (it.isJsonNull) null else it.asString }
+        val code =
+            errorEvent?.get("code")?.asInt
+                ?: jsonObject.get("code")?.asInt
+                ?: 1011
+        val message =
+            errorEvent?.get("message")?.let { if (it.isJsonNull) null else it.asString }
+                ?: jsonObject.get("message")?.let { if (it.isJsonNull) null else it.asString }
         return ConversationEvent.ServerError(code = code, message = message)
     }
 
     /**
      * Handle parsing errors
      */
-    private fun handleParsingError(json: String, error: Exception) {
+    private fun handleParsingError(
+        json: String,
+        error: Exception,
+    ) {
         Log.d("ConversationEventParser", "Failed to parse conversation event: ${error.message}")
         Log.d("ConversationEventParser", "JSON: $json")
     }
@@ -381,7 +393,7 @@ sealed class OutgoingEvent {
     data class Feedback(
         val score: String, // "like" or "dislike"
         @SerializedName("event_id")
-        val eventId: Int
+        val eventId: Int,
     ) : OutgoingEvent() {
         override val type = "feedback"
     }
@@ -415,7 +427,7 @@ sealed class OutgoingEvent {
      */
     data class Pong(
         @SerializedName("event_id")
-        val eventId: Int
+        val eventId: Int,
     ) : OutgoingEvent() {
         override val type: String = "pong"
     }

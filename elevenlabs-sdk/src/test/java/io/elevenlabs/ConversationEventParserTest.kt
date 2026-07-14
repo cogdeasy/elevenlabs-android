@@ -2,20 +2,24 @@ package io.elevenlabs
 
 import io.elevenlabs.models.ConversationEvent
 import io.elevenlabs.network.ConversationEventParser
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.Assert.*
 
 /**
  * Tests for ConversationEventParser, specifically for client tool call parsing
  * and expects_response default behavior.
  */
 class ConversationEventParserTest {
-
     // ==================== client_tool_call event type tests ====================
 
     @Test
     fun `client_tool_call with expects_response true should return true`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -25,7 +29,7 @@ class ConversationEventParserTest {
                     "expects_response": true
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -39,7 +43,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `client_tool_call with expects_response false should return false`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -49,7 +54,7 @@ class ConversationEventParserTest {
                     "expects_response": false
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -61,7 +66,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `client_tool_call without expects_response field should default to true`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -71,7 +77,7 @@ class ConversationEventParserTest {
                     "event_id": 17
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -85,7 +91,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `client_tool_call with null expects_response should default to true`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -95,7 +102,7 @@ class ConversationEventParserTest {
                     "expects_response": null
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -109,7 +116,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `agent_tool_request with tool_type client should default expects_response to true`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "agent_tool_request",
                 "agent_tool_request": {
@@ -119,7 +127,7 @@ class ConversationEventParserTest {
                     "event_id": 38
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -133,7 +141,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `agent_tool_request with explicit expects_response false should return false`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "agent_tool_request",
                 "agent_tool_request": {
@@ -143,7 +152,7 @@ class ConversationEventParserTest {
                     "expects_response": false
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -155,7 +164,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `agent_tool_request without tool_type should still default expects_response to true`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "agent_tool_request",
                 "agent_tool_request": {
@@ -164,7 +174,7 @@ class ConversationEventParserTest {
                     "event_id": 42
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -178,7 +188,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `client_tool_call should parse string parameters correctly`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -191,7 +202,7 @@ class ConversationEventParserTest {
                     }
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -205,7 +216,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `client_tool_call should parse numeric parameters correctly`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -218,7 +230,7 @@ class ConversationEventParserTest {
                     }
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -232,7 +244,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `client_tool_call should parse boolean parameters correctly`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -244,7 +257,7 @@ class ConversationEventParserTest {
                     }
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -257,7 +270,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `client_tool_call with empty parameters should work`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "client_tool_call",
                 "client_tool_call": {
@@ -266,7 +280,7 @@ class ConversationEventParserTest {
                     "parameters": {}
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -281,7 +295,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `agent_response should parse event_id`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "agent_response",
                 "agent_response_event": {
@@ -289,7 +304,7 @@ class ConversationEventParserTest {
                     "event_id": 12
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -301,7 +316,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `user_transcript should parse event_id`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "user_transcript",
                 "user_transcription_event": {
@@ -309,7 +325,7 @@ class ConversationEventParserTest {
                     "event_id": 8
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -321,7 +337,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `agent_chat_response_part should parse event_id and type`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "agent_chat_response_part",
                 "text_response_part": {
@@ -330,7 +347,7 @@ class ConversationEventParserTest {
                     "event_id": 3
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -343,7 +360,8 @@ class ConversationEventParserTest {
 
     @Test
     fun `agent_response_correction should parse event_id`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "agent_response_correction",
                 "agent_response_correction_event": {
@@ -352,7 +370,7 @@ class ConversationEventParserTest {
                     "event_id": 21
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -364,14 +382,15 @@ class ConversationEventParserTest {
 
     @Test
     fun `agent_response without event_id yields null event_id`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "agent_response",
                 "agent_response_event": {
                     "agent_response": "Hello"
                 }
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -379,16 +398,124 @@ class ConversationEventParserTest {
         assertEquals(null, (event as ConversationEvent.AgentResponse).eventId)
     }
 
+    // ==================== conversation_initiation_metadata tests ====================
+
+    @Test
+    fun `conversation_initiation_metadata with _event-suffixed key should parse payload`() {
+        val json =
+            """
+            {
+                "type": "conversation_initiation_metadata",
+                "conversation_initiation_metadata_event": {
+                    "conversation_id": "conv_123",
+                    "agent_output_audio_format": "pcm_16000",
+                    "user_input_audio_format": "pcm_8000"
+                }
+            }
+            """.trimIndent()
+
+        val event = ConversationEventParser.parseIncomingEvent(json)
+
+        assertTrue(event is ConversationEvent.ConversationInitiationMetadata)
+        val metadata = event as ConversationEvent.ConversationInitiationMetadata
+        assertEquals("conv_123", metadata.conversationId)
+        assertEquals("pcm_16000", metadata.agentOutputAudioFormat)
+        assertEquals("pcm_8000", metadata.userInputAudioFormat)
+    }
+
+    @Test
+    fun `conversation_initiation_metadata with unsuffixed key should parse payload`() {
+        val json =
+            """
+            {
+                "type": "conversation_initiation_metadata",
+                "conversation_initiation_metadata": {
+                    "conversation_id": "conv_456",
+                    "agent_output_audio_format": "pcm_44100",
+                    "user_input_audio_format": "pcm_16000"
+                }
+            }
+            """.trimIndent()
+
+        val event = ConversationEventParser.parseIncomingEvent(json)
+
+        assertTrue(event is ConversationEvent.ConversationInitiationMetadata)
+        val metadata = event as ConversationEvent.ConversationInitiationMetadata
+        assertEquals("conv_456", metadata.conversationId)
+        assertEquals("pcm_44100", metadata.agentOutputAudioFormat)
+        assertEquals("pcm_16000", metadata.userInputAudioFormat)
+    }
+
+    @Test
+    fun `conversation_initiation_metadata with flat root payload should parse`() {
+        val json =
+            """
+            {
+                "type": "conversation_initiation_metadata",
+                "conversation_id": "conv_789",
+                "agent_output_audio_format": "pcm_16000",
+                "user_input_audio_format": "pcm_16000"
+            }
+            """.trimIndent()
+
+        val event = ConversationEventParser.parseIncomingEvent(json)
+
+        assertTrue(event is ConversationEvent.ConversationInitiationMetadata)
+        val metadata = event as ConversationEvent.ConversationInitiationMetadata
+        assertEquals("conv_789", metadata.conversationId)
+    }
+
+    @Test
+    fun `conversation_initiation_metadata should prefer _event-suffixed key over unsuffixed`() {
+        val json =
+            """
+            {
+                "type": "conversation_initiation_metadata",
+                "conversation_initiation_metadata_event": {
+                    "conversation_id": "conv_suffixed"
+                },
+                "conversation_initiation_metadata": {
+                    "conversation_id": "conv_unsuffixed"
+                }
+            }
+            """.trimIndent()
+
+        val event = ConversationEventParser.parseIncomingEvent(json)
+
+        assertTrue(event is ConversationEvent.ConversationInitiationMetadata)
+        assertEquals("conv_suffixed", (event as ConversationEvent.ConversationInitiationMetadata).conversationId)
+    }
+
+    @Test
+    fun `conversation_initiation_metadata with missing fields should default to empty strings`() {
+        val json =
+            """
+            {
+                "type": "conversation_initiation_metadata",
+                "conversation_initiation_metadata_event": {}
+            }
+            """.trimIndent()
+
+        val event = ConversationEventParser.parseIncomingEvent(json)
+
+        assertTrue(event is ConversationEvent.ConversationInitiationMetadata)
+        val metadata = event as ConversationEvent.ConversationInitiationMetadata
+        assertEquals("", metadata.conversationId)
+        assertEquals("", metadata.agentOutputAudioFormat)
+        assertEquals("", metadata.userInputAudioFormat)
+    }
+
     // ==================== Edge case tests ====================
 
     @Test
     fun `unknown event type should return null`() {
-        val json = """
+        val json =
+            """
             {
                 "type": "unknown_event_type",
                 "data": {}
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val event = ConversationEventParser.parseIncomingEvent(json)
 
@@ -404,4 +531,3 @@ class ConversationEventParserTest {
         assertNull(event)
     }
 }
-

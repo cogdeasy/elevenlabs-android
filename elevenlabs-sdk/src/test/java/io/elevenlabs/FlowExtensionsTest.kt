@@ -18,7 +18,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FlowExtensionsTest {
-
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 

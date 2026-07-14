@@ -12,7 +12,9 @@ enum class ConversationMode {
     /**
      * The agent is currently speaking
      */
-    SPEAKING;
+    SPEAKING,
+
+    ;
 
     /**
      * Returns true if the agent is currently listening

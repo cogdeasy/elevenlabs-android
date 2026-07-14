@@ -17,7 +17,6 @@ import kotlin.coroutines.resume
  * audio recording permissions with proper callbacks and state management.
  */
 class AudioPermissionManager {
-
     companion object {
         const val AUDIO_PERMISSION_REQUEST_CODE = 1001
 
@@ -28,12 +27,11 @@ class AudioPermissionManager {
          * @param context Android context
          * @return true if permission is granted
          */
-        fun hasAudioPermission(context: Context): Boolean {
-            return ContextCompat.checkSelfPermission(
+        fun hasAudioPermission(context: Context): Boolean =
+            ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO,
             ) == PackageManager.PERMISSION_GRANTED
-        }
 
         /**
          * Request audio recording permission from an Activity
@@ -54,7 +52,7 @@ class AudioPermissionManager {
                 ActivityCompat.requestPermissions(
                     activity,
                     arrayOf(Manifest.permission.RECORD_AUDIO),
-                    AUDIO_PERMISSION_REQUEST_CODE
+                    AUDIO_PERMISSION_REQUEST_CODE,
                 )
             }
         }
@@ -78,7 +76,7 @@ class AudioPermissionManager {
 
                 fragment.requestPermissions(
                     arrayOf(Manifest.permission.RECORD_AUDIO),
-                    AUDIO_PERMISSION_REQUEST_CODE
+                    AUDIO_PERMISSION_REQUEST_CODE,
                 )
             }
         }
@@ -94,11 +92,12 @@ class AudioPermissionManager {
         fun handlePermissionResult(
             requestCode: Int,
             permissions: Array<out String>,
-            grantResults: IntArray
+            grantResults: IntArray,
         ) {
             if (requestCode == AUDIO_PERMISSION_REQUEST_CODE) {
-                val granted = grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                val granted =
+                    grantResults.isNotEmpty() &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED
 
                 permissionCallback?.invoke(granted)
             }
@@ -109,62 +108,53 @@ class AudioPermissionManager {
          * @param activity The activity to check
          * @return true if permission is permanently denied
          */
-        fun isPermissionPermanentlyDenied(activity: Activity): Boolean {
-            return !ActivityCompat.shouldShowRequestPermissionRationale(
+        fun isPermissionPermanentlyDenied(activity: Activity): Boolean =
+            !ActivityCompat.shouldShowRequestPermissionRationale(
                 activity,
-                Manifest.permission.RECORD_AUDIO
-            ) && !hasAudioPermission(activity)
-        }
+                Manifest.permission.RECORD_AUDIO,
+            ) &&
+                !hasAudioPermission(activity)
 
         /**
          * Check if we should show a rationale for the audio permission
          * @param activity The activity to check
          * @return true if we should show rationale
          */
-        fun shouldShowPermissionRationale(activity: Activity): Boolean {
-            return ActivityCompat.shouldShowRequestPermissionRationale(
+        fun shouldShowPermissionRationale(activity: Activity): Boolean =
+            ActivityCompat.shouldShowRequestPermissionRationale(
                 activity,
-                Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO,
             )
-        }
 
         /**
          * Get a user-friendly explanation for why audio permission is needed
          * @return Permission rationale message
          */
-        fun getPermissionRationale(): String {
-            return "This app needs access to your microphone to enable voice conversations with AI agents. " +
-                    "Your audio will be processed in real-time for the conversation but not stored or shared."
-        }
+        fun getPermissionRationale(): String =
+            "This app needs access to your microphone to enable voice conversations with AI agents. " +
+                "Your audio will be processed in real-time for the conversation but not stored or shared."
 
         /**
          * Get a message to show when permission is permanently denied
          * @return Permanent denial message
          */
-        fun getPermanentDenialMessage(): String {
-            return "Microphone access has been permanently denied. To enable voice conversations, " +
-                    "please go to Settings > Apps > [App Name] > Permissions and enable Microphone access."
-        }
+        fun getPermanentDenialMessage(): String =
+            "Microphone access has been permanently denied. To enable voice conversations, " +
+                "please go to Settings > Apps > [App Name] > Permissions and enable Microphone access."
     }
 }
 
 /**
  * Extension function for Activity to easily request audio permission
  */
-suspend fun Activity.requestAudioPermission(): Boolean {
-    return AudioPermissionManager.requestAudioPermission(this)
-}
+suspend fun Activity.requestAudioPermission(): Boolean = AudioPermissionManager.requestAudioPermission(this)
 
 /**
  * Extension function for Fragment to easily request audio permission
  */
-suspend fun Fragment.requestAudioPermission(): Boolean {
-    return AudioPermissionManager.requestAudioPermission(this)
-}
+suspend fun Fragment.requestAudioPermission(): Boolean = AudioPermissionManager.requestAudioPermission(this)
 
 /**
  * Extension function for Context to easily check audio permission
  */
-fun Context.hasAudioPermission(): Boolean {
-    return AudioPermissionManager.hasAudioPermission(this)
-}
+fun Context.hasAudioPermission(): Boolean = AudioPermissionManager.hasAudioPermission(this)

@@ -11,9 +11,13 @@ import io.elevenlabs.models.toConversationStatus
 import io.elevenlabs.network.BaseConnection
 import io.elevenlabs.network.ConversationEventParser
 import io.livekit.android.room.Room
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 /**
  * Complete implementation of ConversationSession
@@ -27,77 +31,131 @@ internal class ConversationSessionImpl(
     private val room: Room? = null,
     private val connection: BaseConnection,
     private val audioManager: AudioManager,
-    private val toolRegistry: ClientToolRegistry
+    private val toolRegistry: ClientToolRegistry,
 ) : ConversationSession {
-
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
     @Volatile private var conversationId: String? = null
 
     // Event handler for processing conversation events.
     // The deprecated config callbacks are intentionally bridged here for back-compat.
     @Suppress("DEPRECATION")
-    private val eventHandler = ConversationEventHandler(
-        audioManager = audioManager,
-        toolRegistry = toolRegistry,
-        messageCallback = { event ->
-            // Send outgoing events through the connection
-            connection.sendMessage(event)
-        },
-        onCanSendFeedbackChange = { canSend ->
-            try { config.onCanSendFeedbackChange?.invoke(canSend) } catch (_: Throwable) {}
-        },
-        onUnhandledClientToolCall = { call ->
-            try { config.onUnhandledClientToolCall?.invoke(call) } catch (_: Throwable) {}
-        },
-        onVadScore = { score ->
-            try { config.onVadScore?.invoke(score) } catch (_: Throwable) {}
-        },
-        onAudioAlignment = { alignment ->
-            try { config.onAudioAlignment?.invoke(alignment) } catch (_: Throwable) {}
-        },
-        onAgentResponseMetadata = { metadata ->
-            try { config.onAgentResponseMetadata?.invoke(metadata) } catch (_: Throwable) {}
-        },
-        onUserTranscript = { transcript ->
-            try { config.onUserTranscript?.invoke(transcript) } catch (_: Throwable) {}
-        },
-        onAgentResponse = { response ->
-            try { config.onAgentResponse?.invoke(response) } catch (_: Throwable) {}
-        },
-        onAgentResponseCorrection = { original, corrected ->
-            try { config.onAgentResponseCorrection?.invoke(original, corrected) } catch (_: Throwable) {}
-        },
-        onUserTranscriptEvent = { text, eventId ->
-            try { config.onUserTranscriptEvent?.invoke(text, eventId) } catch (_: Throwable) {}
-        },
-        onTentativeUserTranscriptEvent = { text, eventId ->
-            try { config.onTentativeUserTranscriptEvent?.invoke(text, eventId) } catch (_: Throwable) {}
-        },
-        onAgentResponseEvent = { text, eventId ->
-            try { config.onAgentResponseEvent?.invoke(text, eventId) } catch (_: Throwable) {}
-        },
-        onAgentResponsePartEvent = { partType, text, eventId ->
-            try { config.onAgentResponsePartEvent?.invoke(partType, text, eventId) } catch (_: Throwable) {}
-        },
-        onAgentResponseCorrectionEvent = { text, eventId ->
-            try { config.onAgentResponseCorrectionEvent?.invoke(text, eventId) } catch (_: Throwable) {}
-        },
-        onAgentToolResponse = { toolName, toolCallId, toolType, isError ->
-            try { config.onAgentToolResponse?.invoke(toolName, toolCallId, toolType, isError) } catch (_: Throwable) {}
-        },
-        onConversationInitiationMetadata = { conversationId, agentOutputFormat, userInputFormat ->
-            try { config.onConversationInitiationMetadata?.invoke(conversationId, agentOutputFormat, userInputFormat) } catch (_: Throwable) {}
-        },
-        onInterruption = { eventId ->
-            try { config.onInterruption?.invoke(eventId) } catch (_: Throwable) {}
-        },
-        onEndCall = {
-            endSession()
-        },
-        onError = { code, message ->
-            try { config.onError?.invoke(code, message) } catch (_: Throwable) {}
-        }
-    )
+    private val eventHandler =
+        ConversationEventHandler(
+            audioManager = audioManager,
+            toolRegistry = toolRegistry,
+            messageCallback = { event ->
+                // Send outgoing events through the connection
+                connection.sendMessage(event)
+            },
+            onCanSendFeedbackChange = { canSend ->
+                try {
+                    config.onCanSendFeedbackChange?.invoke(canSend)
+                } catch (_: Throwable) {
+                }
+            },
+            onUnhandledClientToolCall = { call ->
+                try {
+                    config.onUnhandledClientToolCall?.invoke(call)
+                } catch (_: Throwable) {
+                }
+            },
+            onVadScore = { score ->
+                try {
+                    config.onVadScore?.invoke(score)
+                } catch (_: Throwable) {
+                }
+            },
+            onAudioAlignment = { alignment ->
+                try {
+                    config.onAudioAlignment?.invoke(alignment)
+                } catch (_: Throwable) {
+                }
+            },
+            onAgentResponseMetadata = { metadata ->
+                try {
+                    config.onAgentResponseMetadata?.invoke(metadata)
+                } catch (_: Throwable) {
+                }
+            },
+            onUserTranscript = { transcript ->
+                try {
+                    config.onUserTranscript?.invoke(transcript)
+                } catch (_: Throwable) {
+                }
+            },
+            onAgentResponse = { response ->
+                try {
+                    config.onAgentResponse?.invoke(response)
+                } catch (_: Throwable) {
+                }
+            },
+            onAgentResponseCorrection = { original, corrected ->
+                try {
+                    config.onAgentResponseCorrection?.invoke(original, corrected)
+                } catch (_: Throwable) {
+                }
+            },
+            onUserTranscriptEvent = { text, eventId ->
+                try {
+                    config.onUserTranscriptEvent?.invoke(text, eventId)
+                } catch (_: Throwable) {
+                }
+            },
+            onTentativeUserTranscriptEvent = { text, eventId ->
+                try {
+                    config.onTentativeUserTranscriptEvent?.invoke(text, eventId)
+                } catch (_: Throwable) {
+                }
+            },
+            onAgentResponseEvent = { text, eventId ->
+                try {
+                    config.onAgentResponseEvent?.invoke(text, eventId)
+                } catch (_: Throwable) {
+                }
+            },
+            onAgentResponsePartEvent = { partType, text, eventId ->
+                try {
+                    config.onAgentResponsePartEvent?.invoke(partType, text, eventId)
+                } catch (_: Throwable) {
+                }
+            },
+            onAgentResponseCorrectionEvent = { text, eventId ->
+                try {
+                    config.onAgentResponseCorrectionEvent?.invoke(text, eventId)
+                } catch (_: Throwable) {
+                }
+            },
+            onAgentToolResponse = { toolName, toolCallId, toolType, isError ->
+                try {
+                    config.onAgentToolResponse?.invoke(toolName, toolCallId, toolType, isError)
+                } catch (_: Throwable) {
+                }
+            },
+            onConversationInitiationMetadata = { conversationId, agentOutputFormat, userInputFormat ->
+                try {
+                    config.onConversationInitiationMetadata?.invoke(conversationId, agentOutputFormat, userInputFormat)
+                } catch (
+                    _: Throwable,
+                ) {
+                }
+            },
+            onInterruption = { eventId ->
+                try {
+                    config.onInterruption?.invoke(eventId)
+                } catch (_: Throwable) {
+                }
+            },
+            onEndCall = {
+                endSession()
+            },
+            onError = { code, message ->
+                try {
+                    config.onError?.invoke(code, message)
+                } catch (_: Throwable) {
+                }
+            },
+        )
 
     // StateFlow backing fields
     private val _status = MutableStateFlow<ConversationStatus>(ConversationStatus.DISCONNECTED)
@@ -142,12 +200,13 @@ internal class ConversationSessionImpl(
             Log.d("ConversationSession", "Starting connection to $serverUrl")
             // Wrap onConnect to capture conversationId while preserving user's callback
             val originalOnConnect = config.onConnect
-            val wrappedConfig = config.copy(
-                onConnect = { id ->
-                    conversationId = id
-                    originalOnConnect?.runCatching { invoke(id) }
-                }
-            )
+            val wrappedConfig =
+                config.copy(
+                    onConnect = { id ->
+                        conversationId = id
+                        originalOnConnect?.runCatching { invoke(id) }
+                    },
+                )
 
             connection.connect(serverUrl, wrappedConfig)
 
@@ -187,7 +246,7 @@ internal class ConversationSessionImpl(
                 Log.w(
                     "ConversationSession",
                     "Error ending conversation session ($functionName): ${it.message}",
-                    it
+                    it,
                 )
             }
         }
@@ -225,7 +284,11 @@ internal class ConversationSessionImpl(
         eventHandler.sendUserActivity()
     }
 
-    override fun sendToolResult(toolCallId: String, result: String, isError: Boolean) {
+    override fun sendToolResult(
+        toolCallId: String,
+        result: String,
+        isError: Boolean,
+    ) {
         eventHandler.sendToolResult(toolCallId, result, isError)
     }
 
@@ -248,11 +311,12 @@ internal class ConversationSessionImpl(
         audioManager.setVolume(volume)
     }
 
-    override fun getVolume(): Float {
-        return audioManager.getVolume()
-    }
+    override fun getVolume(): Float = audioManager.getVolume()
 
-    override fun registerTool(name: String, tool: ClientTool) {
+    override fun registerTool(
+        name: String,
+        tool: ClientTool,
+    ) {
         toolRegistry.registerTool(name, tool)
     }
 

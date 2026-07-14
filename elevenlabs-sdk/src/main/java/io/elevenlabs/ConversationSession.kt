@@ -1,6 +1,5 @@
 package io.elevenlabs
 
-import io.elevenlabs.models.ConversationEvent
 import io.elevenlabs.models.ConversationMode
 import io.elevenlabs.models.ConversationStatus
 import io.elevenlabs.models.Message
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
  * that can be used for UI binding in Android applications.
  */
 interface ConversationSession {
-
     // Observable Properties for reactive UI updates
 
     /**
@@ -106,7 +104,11 @@ interface ConversationSession {
      * @param result The result string to send back to the agent
      * @param isError Whether the tool execution resulted in an error
      */
-    fun sendToolResult(toolCallId: String, result: String, isError: Boolean = false)
+    fun sendToolResult(
+        toolCallId: String,
+        result: String,
+        isError: Boolean = false,
+    )
 
     // Audio Control Methods
 
@@ -151,7 +153,10 @@ interface ConversationSession {
      * @param name Tool identifier that the agent will use
      * @param tool Implementation of the tool functionality
      */
-    fun registerTool(name: String, tool: ClientTool)
+    fun registerTool(
+        name: String,
+        tool: ClientTool,
+    )
 
     /**
      * Unregister a previously registered client tool

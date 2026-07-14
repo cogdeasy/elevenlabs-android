@@ -52,11 +52,10 @@ interface ConversationClient {
          * @param context Android context required for audio and network setup
          * @return A new ConversationSession instance
          */
-        suspend fun startSession(config: ConversationConfig, context: android.content.Context): ConversationSession {
-            return ConversationClientImpl.startSession(config, context)
-        }
-
-
+        suspend fun startSession(
+            config: ConversationConfig,
+            context: android.content.Context,
+        ): ConversationSession = ConversationClientImpl.startSession(config, context)
 
         /**
          * Create a session builder for advanced configuration
@@ -64,8 +63,6 @@ interface ConversationClient {
          * @param context Android context required for setup
          * @return ConversationSessionBuilder instance
          */
-        fun builder(context: android.content.Context): ConversationSessionBuilder {
-            return ConversationClientImpl.builder(context)
-        }
+        fun builder(context: android.content.Context): ConversationSessionBuilder = ConversationClientImpl.builder(context)
     }
 }

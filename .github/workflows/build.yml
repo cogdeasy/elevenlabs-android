@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
 
 jobs:
   static-analysis:
@@ -148,7 +147,7 @@ jobs:
         profile: pixel_4
         emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
-        script: ./gradlew :elevenlabs-sdk:connectedDebugAndroidTest
+        script: ./gradlew :elevenlabs-sdk:connectedDebugAndroidTest :example-app:connectedDebugAndroidTest
 
     - name: Upload instrumented test results
       uses: actions/upload-artifact@v4
@@ -158,3 +157,5 @@ jobs:
         path: |
           elevenlabs-sdk/build/reports/androidTests/
           elevenlabs-sdk/build/outputs/androidTest-results/
+          example-app/build/reports/androidTests/
+          example-app/build/outputs/androidTest-results/

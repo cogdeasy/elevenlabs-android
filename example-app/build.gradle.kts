@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-namespace = "io.elevenlabs.example"
+    namespace = "io.elevenlabs.example"
     compileSdk = 35
 
     defaultConfig {
-applicationId = "io.elevenlabs.example"
+        applicationId = "io.elevenlabs.example"
         minSdk = 21
         targetSdk = 35
         versionCode = 1
@@ -23,7 +23,7 @@ applicationId = "io.elevenlabs.example"
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }

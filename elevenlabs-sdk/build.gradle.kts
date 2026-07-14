@@ -9,7 +9,7 @@ group = "io.elevenlabs"
 version = "0.11"
 
 android {
-namespace = "io.elevenlabs"
+    namespace = "io.elevenlabs"
     compileSdk = 35
 
     defaultConfig {
@@ -26,7 +26,7 @@ namespace = "io.elevenlabs"
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }

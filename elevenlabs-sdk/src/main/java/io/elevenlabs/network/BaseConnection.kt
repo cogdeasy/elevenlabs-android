@@ -10,7 +10,6 @@ import io.elevenlabs.models.DisconnectionDetails
  * while supporting event-driven architecture with observable state.
  */
 abstract class BaseConnection {
-
     /**
      * Establish a connection. Each transport reads its own credential from [config]:
      * WebRTC uses [ConversationConfig.conversationToken], WebSocket uses
@@ -21,7 +20,10 @@ abstract class BaseConnection {
      * @param config Conversation configuration
      * @throws RuntimeException if connection fails
      */
-    abstract suspend fun connect(serverUrl: String, config: ConversationConfig)
+    abstract suspend fun connect(
+        serverUrl: String,
+        config: ConversationConfig,
+    )
 
     /**
      * Disconnect from the server and clean up resources

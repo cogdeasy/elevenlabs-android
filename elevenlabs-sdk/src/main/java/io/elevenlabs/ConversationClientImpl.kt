@@ -3,6 +3,8 @@ package io.elevenlabs
 import android.content.Context
 import android.util.Log
 import io.elevenlabs.BuildConfig
+import io.elevenlabs.ConversationConfig
+import io.elevenlabs.ConversationSession
 import io.elevenlabs.audio.AudioSessionManager
 import io.elevenlabs.audio.LiveKitAudioManager
 import io.elevenlabs.audio.NoOpAudioManager
@@ -10,11 +12,9 @@ import io.elevenlabs.audio.SoftwareMuteProcessor
 import io.elevenlabs.network.TokenService
 import io.elevenlabs.network.WebRTCConnection
 import io.elevenlabs.network.WebSocketConnection
-import io.elevenlabs.ConversationSession
-import io.elevenlabs.ConversationConfig
+import io.livekit.android.AudioOptions
 import io.livekit.android.LiveKit
 import io.livekit.android.LiveKitOverrides
-import io.livekit.android.AudioOptions
 import io.livekit.android.audio.AudioProcessorOptions
 
 /**
@@ -24,7 +24,6 @@ import io.livekit.android.audio.AudioProcessorOptions
  * network layer, audio management, event handling, and client tools.
  */
 internal object ConversationClientImpl {
-
     /**
      * Factory method to create and start a conversation session
      *
@@ -34,7 +33,7 @@ internal object ConversationClientImpl {
      */
     suspend fun startSession(
         config: ConversationConfig,
-        context: Context
+        context: Context,
     ): ConversationSession {
         validateConfig(config)
         return if (config.textOnly) {
@@ -50,46 +49,54 @@ internal object ConversationClientImpl {
      */
     private suspend fun startVoiceSession(
         config: ConversationConfig,
-        context: Context
+        context: Context,
     ): ConversationSession {
         // Generate token if needed for public agents
-        val finalConfig = if (!config.isPrivateAgent) {
-            val tokenService = TokenService(baseUrl = config.apiEndpoint)
-            val tokenResponse = tokenService.fetchPublicAgentToken(
-                config.agentId!!,
-                config.overrides?.client?.source ?: "android_sdk",
-                config.overrides?.client?.version ?: BuildConfig.SDK_VERSION,
-                config.environment
-            )
-            config.copy(conversationToken = tokenResponse.token, agentId = null)
-        } else {
-            config
-        }
-
-        val softwareMuteProcessor = finalConfig.audioConfiguration
-            ?.takeIf { it.useSoftwareMute }
-            ?.let {
-                SoftwareMuteProcessor(
-                    onMutedSpeech = it.onMutedSpeech,
-                    mutedSpeechThresholdInDb = it.mutedSpeechThreshold
-                        ?: SoftwareMuteProcessor.DEFAULT_THRESHOLD_DB,
-                )
+        val finalConfig =
+            if (!config.isPrivateAgent) {
+                val tokenService = TokenService(baseUrl = config.apiEndpoint)
+                val tokenResponse =
+                    tokenService.fetchPublicAgentToken(
+                        config.agentId!!,
+                        config.overrides?.client?.source ?: "android_sdk",
+                        config.overrides?.client?.version ?: BuildConfig.SDK_VERSION,
+                        config.environment,
+                    )
+                config.copy(conversationToken = tokenResponse.token, agentId = null)
+            } else {
+                config
             }
 
+        val softwareMuteProcessor =
+            finalConfig.audioConfiguration
+                ?.takeIf { it.useSoftwareMute }
+                ?.let {
+                    SoftwareMuteProcessor(
+                        onMutedSpeech = it.onMutedSpeech,
+                        mutedSpeechThresholdInDb =
+                            it.mutedSpeechThreshold
+                                ?: SoftwareMuteProcessor.DEFAULT_THRESHOLD_DB,
+                    )
+                }
+
         // Create LiveKit room
-        val room = LiveKit.create(
-            appContext = context,
-            overrides = LiveKitOverrides(
-                audioOptions = AudioOptions(
-                    javaAudioDeviceModuleCustomizer = { builder ->
-                        builder.setSampleRate(finalConfig.audioInputSampleRate)
-                    },
-                    audioProcessorOptions = softwareMuteProcessor?.let {
-                        AudioProcessorOptions(capturePostProcessor = it)
-                    }
-                )
+        val room =
+            LiveKit.create(
+                appContext = context,
+                overrides =
+                    LiveKitOverrides(
+                        audioOptions =
+                            AudioOptions(
+                                javaAudioDeviceModuleCustomizer = { builder ->
+                                    builder.setSampleRate(finalConfig.audioInputSampleRate)
+                                },
+                                audioProcessorOptions =
+                                    softwareMuteProcessor?.let {
+                                        AudioProcessorOptions(capturePostProcessor = it)
+                                    },
+                            ),
+                    ),
             )
-        )
         Log.d("ConversationClient", "Created LiveKit room instance @${room.hashCode()}")
 
         val connection = WebRTCConnection(context, room)
@@ -103,14 +110,15 @@ internal object ConversationClientImpl {
 
         audioSessionManager.configureForVoiceCall()
 
-        val session = ConversationSessionImpl(
-            context = context,
-            config = finalConfig,
-            room = room,
-            connection = connection,
-            audioManager = audioManager,
-            toolRegistry = toolRegistry,
-        )
+        val session =
+            ConversationSessionImpl(
+                context = context,
+                config = finalConfig,
+                room = room,
+                connection = connection,
+                audioManager = audioManager,
+                toolRegistry = toolRegistry,
+            )
 
         session.start()
         return session
@@ -125,7 +133,7 @@ internal object ConversationClientImpl {
      */
     private suspend fun startTextOnlySession(
         config: ConversationConfig,
-        context: Context
+        context: Context,
     ): ConversationSession {
         // No transport-specific validation needed: validateConfig() already enforces that public
         // agents have agentId and private agents have conversationToken (which, for text-only,
@@ -136,14 +144,15 @@ internal object ConversationClientImpl {
         val audioManager = NoOpAudioManager()
         val toolRegistry = buildToolRegistry(config)
 
-        val session = ConversationSessionImpl(
-            context = context,
-            config = config,
-            room = null,
-            connection = connection,
-            audioManager = audioManager,
-            toolRegistry = toolRegistry,
-        )
+        val session =
+            ConversationSessionImpl(
+                context = context,
+                config = config,
+                room = null,
+                connection = connection,
+                audioManager = audioManager,
+                toolRegistry = toolRegistry,
+            )
 
         session.start()
         return session
@@ -168,11 +177,12 @@ internal object ConversationClientImpl {
      * @throws IllegalArgumentException if configuration is invalid
      */
     private fun validateConfig(config: ConversationConfig) {
-        val provided = listOfNotNull(
-            config.agentId.takeUnless { it.isNullOrBlank() }?.let { "agentId" },
-            config.conversationToken.takeUnless { it.isNullOrBlank() }?.let { "conversationToken" },
-            config.signedUrl.takeUnless { it.isNullOrBlank() }?.let { "signedUrl" },
-        )
+        val provided =
+            listOfNotNull(
+                config.agentId.takeUnless { it.isNullOrBlank() }?.let { "agentId" },
+                config.conversationToken.takeUnless { it.isNullOrBlank() }?.let { "conversationToken" },
+                config.signedUrl.takeUnless { it.isNullOrBlank() }?.let { "signedUrl" },
+            )
         require(provided.size == 1) {
             "ConversationConfig requires exactly one of agentId / conversationToken / signedUrl, " +
                 "got $provided"
@@ -195,16 +205,15 @@ internal object ConversationClientImpl {
      * @param context Android context
      * @return ConversationSessionBuilder instance
      */
-    fun builder(context: Context): ConversationSessionBuilder {
-        return ConversationSessionBuilder(context)
-    }
+    fun builder(context: Context): ConversationSessionBuilder = ConversationSessionBuilder(context)
 }
 
 /**
  * Builder class for creating customized conversation sessions
  */
-class ConversationSessionBuilder(private val context: Context) {
-
+class ConversationSessionBuilder(
+    private val context: Context,
+) {
     private var config: ConversationConfig? = null
     private val customTools = mutableMapOf<String, ClientTool>()
 
@@ -219,7 +228,10 @@ class ConversationSessionBuilder(private val context: Context) {
     /**
      * Add a custom client tool
      */
-    fun addTool(name: String, tool: ClientTool): ConversationSessionBuilder {
+    fun addTool(
+        name: String,
+        tool: ClientTool,
+    ): ConversationSessionBuilder {
         customTools[name] = tool
         return this
     }
@@ -227,20 +239,22 @@ class ConversationSessionBuilder(private val context: Context) {
     /**
      * Add a simple function-based tool
      */
-    fun addTool(name: String, function: suspend (Map<String, Any>) -> String): ConversationSessionBuilder {
-        customTools[name] = object : ClientTool {
-            override suspend fun execute(parameters: Map<String, Any>): ClientToolResult? {
-                return try {
-                    val result = function(parameters)
-                    ClientToolResult.success(result)
-                } catch (e: Exception) {
-                    ClientToolResult.failure("Function execution failed: ${e.message}")
-                }
+    fun addTool(
+        name: String,
+        function: suspend (Map<String, Any>) -> String,
+    ): ConversationSessionBuilder {
+        customTools[name] =
+            object : ClientTool {
+                override suspend fun execute(parameters: Map<String, Any>): ClientToolResult? =
+                    try {
+                        val result = function(parameters)
+                        ClientToolResult.success(result)
+                    } catch (e: Exception) {
+                        ClientToolResult.failure("Function execution failed: ${e.message}")
+                    }
             }
-        }
         return this
     }
-
 
     /**
      * Build the conversation session

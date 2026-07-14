@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,12 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -77,11 +75,12 @@ fun VoiceScreen(
     var volume by rememberSaveable { mutableStateOf(1f) }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 32.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -89,9 +88,10 @@ fun VoiceScreen(
             Image(
                 painter = painterResource(id = R.drawable.elevenlabs_logo),
                 contentDescription = "ElevenLabs Logo",
-                modifier = Modifier
-                    .height(48.dp)
-                    .fillMaxWidth(0.7f),
+                modifier =
+                    Modifier
+                        .height(48.dp)
+                        .fillMaxWidth(0.7f),
             )
             Spacer(Modifier.height(8.dp))
             Text(
@@ -173,16 +173,18 @@ fun VoiceScreen(
 
 @Composable
 private fun StatusCard(status: ConversationStatus) {
-    val (label, color) = when (status) {
-        ConversationStatus.CONNECTED -> "Connected to ElevenLabs" to ConnectedGreen
-        ConversationStatus.CONNECTING -> "Connecting…" to ConnectingAmber
-        ConversationStatus.DISCONNECTED -> "Disconnected" to DisconnectedGray
-        ConversationStatus.DISCONNECTING -> "Disconnecting…" to DisconnectedGray
-        ConversationStatus.ERROR -> "Connection error" to ErrorRed
-    }
+    val (label, color) =
+        when (status) {
+            ConversationStatus.CONNECTED -> "Connected to ElevenLabs" to ConnectedGreen
+            ConversationStatus.CONNECTING -> "Connecting…" to ConnectingAmber
+            ConversationStatus.DISCONNECTED -> "Disconnected" to DisconnectedGray
+            ConversationStatus.DISCONNECTING -> "Disconnecting…" to DisconnectedGray
+            ConversationStatus.ERROR -> "Connection error" to ErrorRed
+        }
     Box(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = "Status: $label", color = color, style = MaterialTheme.typography.bodyMedium)
@@ -191,16 +193,18 @@ private fun StatusCard(status: ConversationStatus) {
 
 @Composable
 private fun ModeIndicator(mode: ConversationMode?) {
-    val (label, color) = when (mode) {
-        ConversationMode.SPEAKING -> "Speaking" to ConnectedGreen
-        ConversationMode.LISTENING -> "Listening" to DisconnectedGray
-        null -> "Idle" to DisconnectedGray
-    }
+    val (label, color) =
+        when (mode) {
+            ConversationMode.SPEAKING -> "Speaking" to ConnectedGreen
+            ConversationMode.LISTENING -> "Listening" to DisconnectedGray
+            null -> "Idle" to DisconnectedGray
+        }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(color, CircleShape),
+            modifier =
+                Modifier
+                    .size(10.dp)
+                    .background(color, CircleShape),
         )
         Spacer(Modifier.size(8.dp))
         Text(text = label, style = MaterialTheme.typography.bodyMedium)
@@ -223,13 +227,14 @@ private fun Transcript(
         MessageList(
             messages = messages,
             isAgentTyping = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp)
-                .background(
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    RoundedCornerShape(12.dp),
-                ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(260.dp)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        RoundedCornerShape(12.dp),
+                    ),
         )
     }
 }
@@ -245,13 +250,15 @@ private fun MessageComposer(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                .padding(12.dp),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+            textStyle =
+                MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
             singleLine = true,
             decorationBox = { inner ->
@@ -273,17 +280,19 @@ private fun MessageComposer(
         ) {
             Button(
                 onClick = onSendContextual,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
             ) {
                 Text("Send contextual message", textAlign = TextAlign.Center)
             }
             Button(
                 onClick = onSendUser,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
             ) {
                 Text("Send user message", textAlign = TextAlign.Center)
             }
@@ -300,10 +309,11 @@ private fun VoiceScreenPreviewListening() {
             mode = ConversationMode.LISTENING,
             isMuted = false,
             canSendFeedback = true,
-            messages = listOf(
-                TextChatMessage("1", "Hey, can you hear me?", isFromUser = true),
-                TextChatMessage("2", "Loud and clear. How can I help?", isFromUser = false),
-            ),
+            messages =
+                listOf(
+                    TextChatMessage("1", "Hey, can you hear me?", isFromUser = true),
+                    TextChatMessage("2", "Loud and clear. How can I help?", isFromUser = false),
+                ),
             onDisconnect = {},
             onToggleMute = {},
             onSetVolume = {},
@@ -356,4 +366,3 @@ private fun VoiceScreenPreviewConnecting() {
         )
     }
 }
-

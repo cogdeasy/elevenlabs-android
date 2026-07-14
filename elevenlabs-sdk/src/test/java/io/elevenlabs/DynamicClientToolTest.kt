@@ -1,13 +1,14 @@
 package io.elevenlabs
 
 import io.elevenlabs.audio.AudioManager
-import io.elevenlabs.models.ConversationEvent
 import io.elevenlabs.network.OutgoingEvent
-import io.mockk.*
+import io.mockk.mockk
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
 
 /**
  * Tests for dynamic client tool handling functionality
@@ -18,7 +19,6 @@ import org.junit.Assert.*
  * 3. Support for string result values
  */
 class DynamicClientToolTest {
-
     private lateinit var audioManager: AudioManager
     private lateinit var toolRegistry: ClientToolRegistry
     private lateinit var messageCallback: (OutgoingEvent) -> Unit
@@ -41,18 +41,19 @@ class DynamicClientToolTest {
 
     @Test
     fun `sendToolResult sends correct event with success result`() {
-        val eventHandler = ConversationEventHandler(
-            audioManager = audioManager,
-            toolRegistry = toolRegistry,
-            messageCallback = messageCallback
-        )
+        val eventHandler =
+            ConversationEventHandler(
+                audioManager = audioManager,
+                toolRegistry = toolRegistry,
+                messageCallback = messageCallback,
+            )
 
         val result = "The temperature is 25 degrees"
 
         eventHandler.sendToolResult(
             toolCallId = "tool-123",
             result = result,
-            isError = false
+            isError = false,
         )
 
         assertEquals(1, capturedEvents.size)
@@ -64,18 +65,19 @@ class DynamicClientToolTest {
 
     @Test
     fun `sendToolResult sends correct event with error result`() {
-        val eventHandler = ConversationEventHandler(
-            audioManager = audioManager,
-            toolRegistry = toolRegistry,
-            messageCallback = messageCallback
-        )
+        val eventHandler =
+            ConversationEventHandler(
+                audioManager = audioManager,
+                toolRegistry = toolRegistry,
+                messageCallback = messageCallback,
+            )
 
         val errorResult = "Something went wrong"
 
         eventHandler.sendToolResult(
             toolCallId = "tool-456",
             result = errorResult,
-            isError = true
+            isError = true,
         )
 
         assertEquals(1, capturedEvents.size)
@@ -87,11 +89,12 @@ class DynamicClientToolTest {
 
     @Test
     fun `sendToolResult with JSON string result`() {
-        val eventHandler = ConversationEventHandler(
-            audioManager = audioManager,
-            toolRegistry = toolRegistry,
-            messageCallback = messageCallback
-        )
+        val eventHandler =
+            ConversationEventHandler(
+                audioManager = audioManager,
+                toolRegistry = toolRegistry,
+                messageCallback = messageCallback,
+            )
 
         // When you need to send complex data, serialize it as a JSON string
         val jsonResult = """{"status":"completed","items":[{"id":1,"name":"Item 1"},{"id":2,"name":"Item 2"}],"count":2}"""
@@ -99,7 +102,7 @@ class DynamicClientToolTest {
         eventHandler.sendToolResult(
             toolCallId = "complex-789",
             result = jsonResult,
-            isError = false
+            isError = false,
         )
 
         assertEquals(1, capturedEvents.size)

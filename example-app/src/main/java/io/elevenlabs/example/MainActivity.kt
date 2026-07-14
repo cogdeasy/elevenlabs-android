@@ -34,13 +34,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import io.elevenlabs.example.ui.AppTheme
 import io.elevenlabs.example.ui.StartScreen
 import io.elevenlabs.example.ui.TextChatScreen
 import io.elevenlabs.example.ui.VoiceScreen
 import io.elevenlabs.example.viewmodels.ConversationViewModel
 import io.elevenlabs.models.ConversationStatus
+import kotlinx.coroutines.delay
 
 private const val PREFS_NAME = "elevenlabs_permissions"
 private const val PREF_KEY_AUDIO_PERMISSION = "audio_permission_working"
@@ -54,7 +54,6 @@ private const val PREF_KEY_AUDIO_PERMISSION = "audio_permission_working"
  * All state lives on a single shared [ConversationViewModel].
  */
 class MainActivity : ComponentActivity() {
-
     private val viewModel: ConversationViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,23 +91,26 @@ private fun AppRoot(viewModel: ConversationViewModel) {
 
     // Permission launcher for voice mode. Persists a "working" flag (workaround for a LiveKit
     // 2.13.0+ bug that occasionally fails to detect a fresh permission grant on the first call).
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        if (granted) {
-            context.getSharedPreferences(PREFS_NAME, ComponentActivity.MODE_PRIVATE)
-                .edit()
-                .putBoolean(PREF_KEY_AUDIO_PERMISSION, true)
-                .apply()
-            viewModel.startConversation(context, textOnly = false)
-        } else {
-            Toast.makeText(
-                context,
-                "Microphone permission is required for voice conversations",
-                Toast.LENGTH_LONG,
-            ).show()
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            if (granted) {
+                context
+                    .getSharedPreferences(PREFS_NAME, ComponentActivity.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean(PREF_KEY_AUDIO_PERMISSION, true)
+                    .apply()
+                viewModel.startConversation(context, textOnly = false)
+            } else {
+                Toast
+                    .makeText(
+                        context,
+                        "Microphone permission is required for voice conversations",
+                        Toast.LENGTH_LONG,
+                    ).show()
+            }
         }
-    }
 
     // Surface backend errors as toasts at the app level rather than per-screen.
     LaunchedEffect(errorMessage) {
@@ -127,57 +129,64 @@ private fun AppRoot(viewModel: ConversationViewModel) {
 
     // Stay on the start screen until the session is fully CONNECTED. DISCONNECTING is treated as
     // in-session so the controls don't yank out from under the user mid-teardown.
-    val showStart = effectiveStatus != ConversationStatus.CONNECTED &&
-        effectiveStatus != ConversationStatus.DISCONNECTING
+    val showStart =
+        effectiveStatus != ConversationStatus.CONNECTED &&
+            effectiveStatus != ConversationStatus.DISCONNECTING
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            showStart -> StartScreen(
-                textOnlyMode = textOnlyMode,
-                onToggleTextOnly = { textOnlyMode = it },
-                status = effectiveStatus,
-                onConnect = {
-                    if (textOnlyMode) {
-                        viewModel.startConversation(context, textOnly = true)
-                    } else if (hasWorkingMicPermission(context)) {
-                        viewModel.startConversation(context, textOnly = false)
-                    } else {
-                        Log.d("MainActivity", "Requesting RECORD_AUDIO permission for voice mode")
-                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                    }
-                },
-            )
+            showStart ->
+                StartScreen(
+                    textOnlyMode = textOnlyMode,
+                    onToggleTextOnly = { textOnlyMode = it },
+                    status = effectiveStatus,
+                    onConnect = {
+                        if (textOnlyMode) {
+                            viewModel.startConversation(context, textOnly = true)
+                        } else if (hasWorkingMicPermission(context)) {
+                            viewModel.startConversation(context, textOnly = false)
+                        } else {
+                            Log.d("MainActivity", "Requesting RECORD_AUDIO permission for voice mode")
+                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    },
+                )
 
-            textOnlyMode -> TextChatScreen(
-                status = effectiveStatus,
-                messages = messages,
-                isAgentTyping = isAgentTyping,
-                errorMessage = errorMessage,
-                onSend = { viewModel.sendUserMessage(it) },
-                onRetry = { viewModel.retry(context) },
-                onDisconnect = { viewModel.endConversation() },
-            )
+            textOnlyMode ->
+                TextChatScreen(
+                    status = effectiveStatus,
+                    messages = messages,
+                    isAgentTyping = isAgentTyping,
+                    errorMessage = errorMessage,
+                    onSend = { viewModel.sendUserMessage(it) },
+                    onRetry = { viewModel.retry(context) },
+                    onDisconnect = { viewModel.endConversation() },
+                )
 
-            else -> VoiceScreen(
-                status = effectiveStatus,
-                mode = mode,
-                isMuted = isMuted ?: false,
-                canSendFeedback = canSendFeedback ?: false,
-                messages = messages,
-                onDisconnect = { viewModel.endConversation() },
-                onToggleMute = { viewModel.toggleMute() },
-                onSetVolume = { viewModel.setVolume(it) },
-                onThumbsUp = { viewModel.sendFeedback(true) },
-                onThumbsDown = { viewModel.sendFeedback(false) },
-                onSendContextual = { viewModel.sendContextualUpdate(it) },
-                onSendUserMessage = { viewModel.sendUserMessage(it) },
-            )
+            else ->
+                VoiceScreen(
+                    status = effectiveStatus,
+                    mode = mode,
+                    isMuted = isMuted ?: false,
+                    canSendFeedback = canSendFeedback ?: false,
+                    messages = messages,
+                    onDisconnect = { viewModel.endConversation() },
+                    onToggleMute = { viewModel.toggleMute() },
+                    onSetVolume = { viewModel.setVolume(it) },
+                    onThumbsUp = { viewModel.sendFeedback(true) },
+                    onThumbsDown = { viewModel.sendFeedback(false) },
+                    onSendContextual = { viewModel.sendContextualUpdate(it) },
+                    onSendUserMessage = { viewModel.sendUserMessage(it) },
+                )
         }
 
         // Tappable "you appear to be speaking while muted" banner. Surfaced as a top overlay so it
         // floats above the active screen rather than living inside any single one.
-        if (mutedSpeechEvent != null && (isMuted ?: false) &&
-            effectiveStatus == ConversationStatus.CONNECTED && !textOnlyMode) {
+        if (mutedSpeechEvent != null &&
+            (isMuted ?: false) &&
+            effectiveStatus == ConversationStatus.CONNECTED &&
+            !textOnlyMode
+        ) {
             MutedSpeechBanner(
                 modifier = Modifier.align(Alignment.TopCenter),
                 onTap = {
@@ -197,11 +206,12 @@ private fun MutedSpeechBanner(
     onTap: () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MutedSpeechBannerColor)
-            .clickable(onClick = onTap)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MutedSpeechBannerColor)
+                .clickable(onClick = onTap)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -215,10 +225,14 @@ private fun MutedSpeechBanner(
 }
 
 private fun hasWorkingMicPermission(context: android.content.Context): Boolean {
-    val systemPermission = androidx.core.content.ContextCompat.checkSelfPermission(
-        context, Manifest.permission.RECORD_AUDIO,
-    ) == PackageManager.PERMISSION_GRANTED
-    val workingFlag = context.getSharedPreferences(PREFS_NAME, ComponentActivity.MODE_PRIVATE)
-        .getBoolean(PREF_KEY_AUDIO_PERMISSION, false)
+    val systemPermission =
+        androidx.core.content.ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO,
+        ) == PackageManager.PERMISSION_GRANTED
+    val workingFlag =
+        context
+            .getSharedPreferences(PREFS_NAME, ComponentActivity.MODE_PRIVATE)
+            .getBoolean(PREF_KEY_AUDIO_PERMISSION, false)
     return systemPermission && workingFlag
 }
